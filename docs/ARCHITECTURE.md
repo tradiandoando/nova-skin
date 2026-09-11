@@ -128,8 +128,8 @@ The atmosphere still derives from the accent via the core's `color-mix`.
 runs in the extension origin (a different storage), so it behaves as a remote
 control:
 
-- popup → page: `nova:setTheme` / `nova:setFx` / `nova:setCustomThemes`
-- popup ← page: `nova:getState` returns `{ theme, fx, customThemes }` on open
+- popup → page: `nova:setTheme` / `nova:setFx` / `nova:setWatermark` / `nova:setCustomThemes`
+- popup ← page: `nova:getState` returns `{ theme, fx, watermark, customThemes }` on open
 
 Every mutation writes the page storage first (content.js), so all three states
 survive reloads. The popup's own `localStorage` is only a fallback when no
@@ -142,6 +142,9 @@ ChatGPT tab is open.
 - `data-nova-fx="off"` (popup toggle) hides `::before/::after` entirely and
   zeroes `--nova-speed*`, so NOVA motion — but not ChatGPT's native streaming
   dots — stops instantly.
+- The personal watermark (`.nova-watermark`, `z-index: -1`) is a static layer
+  above the nebula and under the veil: no motion, safe under reduced motion and
+  FX-off. Its text/opacity are per-user page storage (`nova.watermark`).
 - `prefers-reduced-motion: reduce` forces `0.01ms` durations/animations on the
   entire page.
 
@@ -152,8 +155,8 @@ manifest.json        MV3: 8 CSS + content.js + popup + icons
 nova.css             the whole design system (tokens, bridge, surfaces…)
 themes/*.css         token-only overrides, one block per file
 themes/_template.css blueprint with all overridable tokens + "theme in 5 steps"
-content.js           master switch + theme/fx plumbing + custom-theme engine
-popup.html/.js       theme picker (live previews) + FX toggle + export/import
+content.js           master switch + theme/fx/watermark plumbing + custom-theme engine
+popup.html/.js       theme picker (live previews) + FX toggle + watermark + export/import
 tools/check.sh       QA in one command (pure Python, no npm)
 docs/ARCHITECTURE.md this file
 ```

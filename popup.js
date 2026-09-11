@@ -176,6 +176,7 @@
   const state = {
     theme: "",
     fx: "on",
+    watermark: null,
     customThemes: loadLocal(CUSTOM_KEY, []).filter(validCustom),
   };
 
@@ -258,6 +259,44 @@
     saveLocal(FX_KEY, next);
     sendMessage({ type: "nova:setFx", fx: next });
   });
+
+  /* ---------- Watermark toggle ---------- */
+  const wmToggle = document.getElementById("wmToggle");
+  const wmFields = document.getElementById("wmFields");
+  const wmText = document.getElementById("wmText");
+  const wmOpacity = document.getElementById("wmOpacity");
+
+  const setWmUI = (wm) => {
+    const has = Boolean(wm && wm.text);
+    wmToggle.setAttribute("aria-checked", has ? "true" : "false");
+    wmFields.hidden = !has;
+    if (has) {
+      wmText.value = wm.text;
+      wmOpacity.value = String(wm.opacity);
+    }
+  };
+
+  const pushWatermark = () => {
+    const wm = { text: wmText.value.trim(), opacity: Number(wmOpacity.value) };
+    state.watermark = wm.text ? wm : null;
+    setWmUI(state.watermark);
+    sendMessage({ type: "nova:setWatermark", watermark: state.watermark });
+  };
+
+  wmToggle.addEventListener("click", () => {
+    const next = wmToggle.getAttribute("aria-checked") !== "true";
+    if (next) {
+      wmToggle.setAttribute("aria-checked", "true");
+      wmFields.hidden = false;
+      wmText.focus();
+    } else {
+      wmText.value = "";
+      pushWatermark();
+    }
+  });
+
+  wmText.addEventListener("input", pushWatermark);
+  wmOpacity.addEventListener("input", pushWatermark);
 
   /* ---------- Export / Import ---------- */
   const exportBtn = document.getElementById("exportTheme");
@@ -352,6 +391,7 @@
   render();
   applyPreview(state.theme);
   setFxUI(state.fx);
+  setWmUI(state.watermark);
 
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const tab = tabs && tabs[0];
@@ -361,10 +401,12 @@
         state.theme = res.theme;
         state.fx = res.fx === "off" ? "off" : "on";
         state.customThemes = (res.customThemes || []).filter(validCustom);
+        if (res.watermark && res.watermark.text) state.watermark = res.watermark;
         saveLocal(CUSTOM_KEY, state.customThemes);
         render();
         applyPreview(state.theme);
         setFxUI(state.fx);
+        setWmUI(state.watermark);
       }
     });
   });

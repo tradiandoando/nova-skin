@@ -26,6 +26,7 @@ This release introduces the first community-oriented foundation of NOVA Skin.
 * **Atmosphere FX control**
 * **Theme Export / Import**
 * **Custom themes from JSON**
+* **Personal background watermark**
 * **35 semantic design tokens**
 * **Theme template for contributors**
 * **One-command local QA**
@@ -62,7 +63,7 @@ NOVA Skin currently runs as an unpacked Chrome / Edge extension.
 
 Clone the repository or download the release ZIP:
 
-`nova-skin-v0.6.0.zip`
+`nova-skin-v0.7.0.zip`
 
 ### 2. Open the extensions page
 
@@ -179,6 +180,20 @@ Custom experience
 ```
 
 You can experiment with visual identity without modifying the core architecture.
+
+---
+
+## Personal watermark
+
+NOVA Skin can place a personal text watermark on the page background — behind the chat, above the nebula layer.
+
+From the popup:
+
+1. Turn on **Watermark**
+2. Type your mark (up to 24 characters)
+3. Adjust the opacity
+
+Each machine keeps its own watermark (the popup persists it on the page), so every user can stamp their own background without touching themes or the core.
 
 ---
 
@@ -353,7 +368,7 @@ NOVA Skin is an independent project and is **not affiliated with, endorsed by, o
 
 ## Status
 
-**Version:** `0.6.0`
+**Version:** `0.7.0`
 
 **Status:** Public Community Preview
 

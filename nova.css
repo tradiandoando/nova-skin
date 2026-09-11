@@ -1071,6 +1071,29 @@ html.nova-skin-active[data-nova-fx="off"] {
   --nova-speed: 0ms;
 }
 
+/* --- MARCA DE AGUA PERSONAL ---
+   Capa de fondo estática, por encima de las nebulosas (::before, z -2)
+   y bajo la bruma (::after, z -1), por lo que el texto queda diáfano.
+   Sin movimiento propio: no depende de FX ni de reduced-motion.
+   Texto y opacidad configurados desde el popup (nova.watermark). */
+html.nova-skin-active .nova-watermark {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+  white-space: nowrap;
+  font-family: var(--nova-font-display);
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  line-height: 1;
+  color: var(--nova-ink-0);
+}
+
 /* =========================================================
    15 · AREAS HUÉRFANAS — tool-use · streaming · bienvenida
    Selectores basados en data-testid confirmados (2025/2026).

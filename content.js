@@ -5,6 +5,8 @@
   const STORAGE_KEY = "nova.theme";
   const FX_KEY = "nova.fx";
   const CUSTOM_KEY = "nova.customThemes";
+  const WATERMARK_KEY = "nova.watermark";
+  const WATERMARK_ID = "nova-watermark";
   const CUSTOM_STYLE_ID = "nova-custom-styles";
 
   const DEFAULT_THEME = "nova";
@@ -71,6 +73,38 @@
     } catch (_) {
       return "on";
     }
+  }
+
+  /* ---------- watermark (marca de agua personal) ---------- */
+  function sanitizeWatermark(w) {
+    if (!w || typeof w !== "object") return null;
+    const text = String(w.text || "").trim().slice(0, 24);
+    if (!text) return null;
+    const opacity = Number.isFinite(Number(w.opacity))
+      ? Math.max(5, Math.min(95, Number(w.opacity)))
+      : 45;
+    return { text, opacity };
+  }
+
+  function readWatermark() {
+    return sanitizeWatermark(readJson(WATERMARK_KEY, null));
+  }
+
+  function ensureWatermark() {
+    const wm = readWatermark();
+    let el = document.getElementById(WATERMARK_ID);
+    if (!wm) {
+      if (el) el.remove();
+      return;
+    }
+    if (!el) {
+      el = document.createElement("div");
+      el.id = WATERMARK_ID;
+      el.className = "nova-watermark";
+      document.body.appendChild(el);
+    }
+    el.textContent = wm.text;
+    el.style.opacity = wm.opacity / 100;
   }
 
   /* ---------- color helpers (custom-theme derivation) ---------- */
@@ -226,13 +260,14 @@
     root.classList.add(NOVA_CLASS);
     applyTheme(readTheme());
     applyFx(readFx());
+    ensureWatermark();
   }
 
   chrome.runtime.onMessage.addListener((msg) => {
     if (!msg || typeof msg !== "object") return;
 
     if (msg.type === "nova:getState") {
-      return { theme: readTheme(), fx: readFx(), customThemes: customThemes };
+      return { theme: readTheme(), fx: readFx(), customThemes: customThemes, watermark: readWatermark() };
     }
 
     if (msg.type === "nova:setTheme" && isValidThemeId(msg.theme)) {
@@ -242,6 +277,10 @@
       const fx = msg.fx === "off" ? "off" : "on";
       writeJson(FX_KEY, fx);
       applyFx(fx);
+    } else if (msg.type === "nova:setWatermark") {
+      const wm = sanitizeWatermark(msg.watermark);
+      localStorage.setItem(WATERMARK_KEY, wm ? JSON.stringify(wm) : "null");
+      ensureWatermark();
     } else if (msg.type === "nova:setCustomThemes" && Array.isArray(msg.themes)) {
       customThemes = msg.themes.filter(validCustom);
       writeJson(CUSTOM_KEY, customThemes);

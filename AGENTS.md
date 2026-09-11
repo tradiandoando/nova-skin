@@ -29,7 +29,7 @@ The user runs Chrome/Edge; there is no CI, lint, or typecheck.
 
 ## State ownership (easy to miss)
 
-The popup lives in the extension origin and the content script in the page origin — **different `localStorage`s**. The page storage is the single source of truth: content.js writes `theme`/`fx`/custom themes there, and the popup reads them via `nova:getState` on open. Never add a parallel persistence in the popup; its storage is only a fallback. When changing theme behavior, keep the message protocol (`nova:setTheme` / `nova:setFx` / `nova:setCustomThemes` / `nova:getState`).
+The popup lives in the extension origin and the content script in the page origin — **different `localStorage`s**. The page storage is the single source of truth: content.js writes `theme`/`fx`/custom themes there, and the popup reads them via `nova:getState` on open. Never add a parallel persistence in the popup; its storage is only a fallback. When changing theme behavior, keep the message protocol (`nova:setTheme` / `nova:setFx` / `nova:setWatermark` / `nova:setCustomThemes` / `nova:getState`).
 
 ## Adding a new theme
 
