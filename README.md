@@ -1,72 +1,403 @@
 # NOVA Skin
 
-Premium visual layer for ChatGPT — a spatial, "spaceship cockpit" redesign of `chatgpt.com` / `chat.openai.com`.
+**A customizable visual layer for ChatGPT.**
 
-Chrome/Edge MV3 extension. **No build step**: pure static files loaded via `content_scripts`.
+NOVA Skin transforms the visual experience of ChatGPT through a token-first theme system, live previews, atmosphere effects, and shareable theme presets.
 
-## Features
+It started as an experiment in interface customization.
 
-- **8 themes** in a popup, split into Dark / Light groups with **live previews**:
-  - Dark: `Nova`, `Cosmic`, `Aurora`, `Mono`, `Sunset`
-  - Light: `Nova Light`, `Cosmic Light`, `Aurora Light`
-- **Export / Import themes as JSON** — save any theme's palette, share it, or import one from a file to create a *Custom* theme (tokens auto-derived at runtime).
-- **Atmosphere FX toggle** — on/off nebula layers + NOVA motion (great for low-end GPUs or reduce-motion preferences).
-- Full re-skin of ChatGPT surfaces: sidebar, messages, composer, dialogs, tool-use cards, streaming, welcome screen, images, scrollbars.
+With v0.6.0, it becomes something more: a small **community-oriented laboratory for exploring how AI interfaces can become more personal, expressive, and adaptable.**
 
-## Install (unpacked)
+> **Create. Validate. Share. Customize.**
 
-> The current ChatGPT version never ships the `nova-skin-active` class set **before** the first paint, so a brief unstyled flash is possible; the theme re-applies instantly.
+---
 
-1. Download / clone this folder (or unzip `nova-skin-v0.6.0.zip`).
-2. Open `chrome://extensions` (or `edge://extensions`).
-3. Enable **Developer mode** (top right).
-4. Click **Load unpacked** and select the folder.
-5. Open `https://chatgpt.com` and click the **NOVA** icon in the toolbar to switch themes.
+## v0.6.0 — Community Layer
 
-> After updating files, reload the extension (↻) and hard-refresh ChatGPT (Ctrl+R).
+This release introduces the first community-oriented foundation of NOVA Skin.
 
-## Roadmap
+### What's included
 
-- [x] Theme popup with live previews
-- [x] Light mode (3 light themes)
-- [x] FX / performance control
-- [x] Mono + Sunset themes
-- [x] Theme export/import (custom themes, no CSS editing)
-- [x] One-command QA (`tools/check.sh`) + contributor docs
-- [ ] More themes (Ice, etc.)
+* **8 built-in themes**
 
-## For developers
+  * Dark: Nova, Cosmic, Aurora, Mono, Sunset
+  * Light: Nova Light, Cosmic Light, Aurora Light
+* **Live theme previews**
+* **Atmosphere FX control**
+* **Theme Export / Import**
+* **Custom themes from JSON**
+* **35 semantic design tokens**
+* **Theme template for contributors**
+* **One-command local QA**
+* **Architecture documentation**
+* **Stable-anchor and reversibility rules**
+* **Chrome / Edge Manifest V3**
+* **No build step**
 
-- **`docs/ARCHITECTURE.md`** — the whole architecture in ~5 min: token bridge, the `transparentado` gotcha, stable-anchor rules, reversibility contract.
-- **`themes/_template.css`** — copy-paste blueprint with all 35 overridable tokens + "create a theme in 5 steps".
-- **`tools/check.sh`** — one-command local QA (pure Python, no npm): CSS balance + prefix enforcement, theme schema, cross-consistency, versions, debug logs.
+---
 
-```
-# validate before shipping anything
+## Why NOVA Skin?
+
+AI interfaces are becoming part of everyday work, learning, creation, and communication.
+
+But the interface is usually fixed.
+
+NOVA Skin explores a different question:
+
+> **What if the interface could adapt to the identity and preferences of the person using it?**
+
+A theme can change the atmosphere without changing the underlying application.
+
+That distinction is important.
+
+**Themes customize the experience. They don't own the interface.**
+
+---
+
+## Install
+
+NOVA Skin currently runs as an unpacked Chrome / Edge extension.
+
+### 1. Download
+
+Clone the repository or download the release ZIP:
+
+`nova-skin-v0.6.0.zip`
+
+### 2. Open the extensions page
+
+Chrome:
+
+`chrome://extensions`
+
+Edge:
+
+`edge://extensions`
+
+### 3. Enable Developer mode
+
+Enable **Developer mode**.
+
+### 4. Load the extension
+
+Choose **Load unpacked** and select the NOVA Skin folder.
+
+### 5. Open ChatGPT
+
+Open:
+
+`https://chatgpt.com`
+
+Click the NOVA Skin icon in the browser toolbar and choose a theme.
+
+After modifying extension files, reload the extension and refresh ChatGPT.
+
+> A brief unstyled flash may occur on initial page load because the current ChatGPT page does not expose the NOVA activation class before first paint. NOVA Skin reapplies the theme immediately after initialization.
+
+---
+
+## Themes
+
+NOVA Skin currently includes:
+
+### Dark
+
+* Nova
+* Cosmic
+* Aurora
+* Mono
+* Sunset
+
+### Light
+
+* Nova Light
+* Cosmic Light
+* Aurora Light
+
+Themes are built around semantic CSS custom properties rather than direct DOM styling.
+
+This allows the visual layer to evolve independently from the underlying ChatGPT interface.
+
+---
+
+## Create your own theme
+
+You don't need to modify the core engine.
+
+Start with:
+
+`themes/_template.css`
+
+The template contains all **35 overridable NOVA tokens**, with comments explaining what each token controls and where it is consumed.
+
+### Create a theme in 5 steps
+
+1. Copy `themes/_template.css`
+2. Give your theme a unique ID and name
+3. Define your visual palette
+4. Run the validator
+5. Load it in NOVA Skin and test it
+
+Before sharing:
+
+```bash
 bash tools/check.sh
 ```
 
+A valid theme should pass the NOVA Skin architecture checks.
+
+---
+
+## Share themes with JSON
+
+NOVA Skin also supports theme presets without editing CSS.
+
+From the popup:
+
+**Export → JSON**
+
+A theme can then be shared as a small preset file.
+
+Another user can:
+
+**Import → select JSON → validate → preview → apply**
+
+Imported themes are placed in the **Custom** theme group.
+
+The custom-theme engine derives the remaining semantic tokens at runtime.
+
+This creates a simple separation:
+
+```text
+NOVA Core
+   ↓
+Theme system
+   ↓
+JSON preset
+   ↓
+Custom experience
+```
+
+You can experiment with visual identity without modifying the core architecture.
+
+---
+
+## Architecture
+
+NOVA Skin follows a **token-first** visual architecture.
+
+```text
+Theme
+  ↓
+Semantic NOVA tokens
+  ↓
+Visual layer
+  ↓
+ChatGPT surfaces
+```
+
+The complete architecture is documented in:
+
+`docs/ARCHITECTURE.md`
+
+It covers:
+
+* the token bridge;
+* background transparency;
+* stable DOM anchors;
+* reversibility;
+* performance considerations;
+* custom theme injection;
+* QA rules.
+
+### Core principle
+
+> **Themes customize the experience. They don't own the interface.**
+
+This keeps the visual layer replaceable and reversible.
+
+---
+
+## Reversibility
+
+NOVA Skin scopes its visual rules behind:
+
+```css
+html.nova-skin-active
+```
+
+Removing the activation class removes the NOVA visual layer and restores the underlying interface.
+
+This is intentional.
+
+NOVA Skin should enhance the interface without permanently taking ownership of it.
+
+---
+
+## Stable anchors
+
+ChatGPT's internal implementation changes over time.
+
+For that reason, NOVA Skin avoids relying on unstable generated identifiers whenever possible.
+
+The architecture prefers stable signals such as:
+
+* semantic roles;
+* `data-testid` attributes;
+* known functional selectors;
+* `#prompt-textarea`;
+* supported structural selectors.
+
+Avoid hardcoded Radix IDs, hash-suffixed utility classes, or selectors that depend on implementation details that can change without notice.
+
+---
+
+## Local QA
+
+NOVA Skin includes a single-command validator:
+
+```bash
+bash tools/check.sh
+```
+
+The validator runs without npm dependencies and checks:
+
+* manifest structure and referenced routes;
+* CSS balance;
+* selector prefixing;
+* theme schema;
+* NOVA token usage;
+* cross-consistency between manifest, content script and popup;
+* versions;
+* debug logging;
+* JavaScript syntax.
+
+The goal is simple:
+
+> **If a contribution breaks the architecture, the validator should catch it before shipping.**
+
+---
+
 ## Project structure
 
+```text
+nova-skin/
+│
+├── docs/
+│   └── ARCHITECTURE.md
+│
+├── themes/
+│   ├── _template.css
+│   ├── cosmic.css
+│   ├── aurora.css
+│   ├── mono.css
+│   ├── sunset.css
+│   ├── nova-light.css
+│   ├── cosmic-light.css
+│   └── aurora-light.css
+│
+├── tools/
+│   └── check.sh
+│
+├── manifest.json
+├── nova.css
+├── content.js
+├── popup.html
+├── popup.js
+└── AGENTS.md
 ```
-manifest.json        MV3: 8 CSS + content.js + popup + icons
-nova.css             The complete design system (tokens, surfaces, sections)
-themes/*.css         Token-only overrides per theme (no DOM selectors)
-themes/_template.css Blueprint with all overridable tokens + "theme in 5 steps"
-content.js           Master switch, theme/FX plumbing, custom-theme engine
-popup.html/.js       Theme picker (live previews) + FX toggle + Export/Import
-tools/check.sh       One-command local QA (pure Python, no npm)
-docs/ARCHITECTURE.md Architecture + design rules for contributors
+
+---
+
+## Community direction
+
+NOVA Skin is being developed as a **public community preview**.
+
+The goal is not simply to collect themes.
+
+We want to explore:
+
+* how people express identity through interfaces;
+* how visual systems can become adaptable;
+* how creators can build without modifying the core;
+* how presets can be shared;
+* how community experimentation can inform future interface systems.
+
+Possible future directions include:
+
+* community theme gallery;
+* more theme presets;
+* contributor workflows;
+* theme submission guidelines;
+* accessibility-oriented themes;
+* additional interface experiments;
+* future connections with the broader NOVA ecosystem.
+
+Nothing in the roadmap is a promise of future functionality.
+
+---
+
+## Security & privacy
+
+NOVA Skin is designed as a local browser customization layer.
+
+The project does not require a NOVA backend to apply themes.
+
+The intended architecture does not require sending ChatGPT conversations, prompts, or user content to an external NOVA server.
+
+Users should always inspect the source and extension permissions of the version they install.
+
+NOVA Skin is an independent project and is **not affiliated with, endorsed by, or sponsored by OpenAI**.
+
+---
+
+## Status
+
+**Version:** `0.6.0`
+
+**Status:** Public Community Preview
+
+NOVA Skin is an evolving experiment.
+
+ChatGPT's interface can change over time, so compatibility may require updates as the underlying application evolves.
+
+---
+
+## Contributing
+
+Before proposing a theme or architectural change:
+
+1. Read `docs/ARCHITECTURE.md`
+2. Start from `themes/_template.css`
+3. Keep themes token-only
+4. Avoid direct DOM selectors inside theme files
+5. Run:
+
+```bash
+bash tools/check.sh
 ```
 
-## Architecture notes
+6. Test the result in ChatGPT
+7. Describe what changed and why
 
-- **Reversibility**: every selector is prefixed by `html.nova-skin-active`; removing the class restores the original UI.
-- **Token-first**: all theming goes through CSS custom properties (`--nova-*`). Theme files override semantic tokens only — no DOM targeting.
-- **Stable anchors only**: targets `[role]`, `[data-testid*]`, `#prompt-textarea`, `:has()`, etc. Never hardcoded Radix IDs or hash-suffixed Tailwind classes.
+The goal is not maximum freedom inside the core.
 
-Development conventions live in [`AGENTS.md`](./AGENTS.md).
+The goal is **maximum creative freedom at the community layer while preserving the architecture underneath.**
+
+---
+
+## Credits
+
+Created as an independent experiment within the broader **NOVA ecosystem**.
+
+Built through human + AI collaboration, iterative development, testing, and real-world experimentation.
+
+> **Protect the vision. Preserve the architecture. Expand the ecosystem.**
+
+---
 
 ## License
 
-Private/personal use. Include attribution if you fork it.
+NOVA Skin v0.6.0 is distributed under the terms of the accompanying `LICENSE` file.
+
+This repository is publicly viewable for learning, experimentation, and community collaboration within the permissions defined by that license.

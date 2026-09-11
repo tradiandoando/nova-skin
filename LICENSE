@@ -1,0 +1,74 @@
+NOVA Skin Community License v0.6
+
+Copyright (c) 2026 NOVA / Rodrigo Giudice
+
+## 1. Purpose
+
+NOVA Skin is published as a public community preview to allow people to inspect, learn from, experiment with, and contribute to the project's community layer.
+
+This license is intended to encourage experimentation while preserving the identity and architectural control of NOVA Skin.
+
+## 2. Permissions
+
+You may:
+
+* view the source code;
+* study the architecture;
+* run NOVA Skin for personal use;
+* install and test the extension locally;
+* create personal theme variations;
+* create and share compatible theme presets;
+* modify community theme files for personal experimentation;
+* propose improvements or contributions to the project.
+
+## 3. Restrictions
+
+You may not, without explicit written permission from the copyright holder:
+
+* sell NOVA Skin or modified copies as a standalone product;
+* redistribute the complete project as your own product;
+* remove or alter copyright, attribution, or project identity notices;
+* represent NOVA Skin as an official OpenAI product;
+* use the NOVA name, branding, or identity to imply official endorsement;
+* package the NOVA Skin core into another commercial product;
+* use the project or its core architecture as the basis of a competing commercial skin platform.
+
+## 4. Community themes
+
+Themes and JSON presets created by community contributors may be shared independently when they do not include or redistribute the NOVA Skin core.
+
+Community contributors retain ownership of their original creative work.
+
+By submitting a contribution to the NOVA Skin project, the contributor grants NOVA permission to use, modify, display, distribute, and include that contribution as part of NOVA Skin and its community materials.
+
+## 5. No warranty
+
+NOVA Skin is provided for experimentation and personal use.
+
+It is provided "as is", without warranties of any kind.
+
+The project may require updates when the underlying ChatGPT interface changes.
+
+## 6. OpenAI
+
+NOVA Skin is an independent third-party project.
+
+It is not affiliated with, endorsed by, sponsored by, or officially connected to OpenAI.
+
+ChatGPT is a trademark of OpenAI.
+
+## 7. Changes to this license
+
+Future versions of NOVA Skin may use a different license.
+
+Each release is governed by the license distributed with that release unless otherwise stated.
+
+## 8. Contact
+
+For commercial licensing, redistribution permissions, or other licensing questions, contact the project maintainer through the official NOVA Skin repository.
+
+---
+
+**NOVA Skin — Public Community Preview**
+
+Create. Validate. Share. Customize.
