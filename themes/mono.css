@@ -1,0 +1,80 @@
+/* =========================================================
+   NOVA SKIN · TEMA "MONO"
+   Graphite · platinum / stone / steel
+   v0.5.0
+   =========================================================
+   Variante minimalista del lenguaje visual NOVA: escala de
+   grises, acentos metálicos (plata/platino) y luz tenue,
+   contenida. Override de tokens semánticos sobre el core.
+
+   Activar: data-nova-theme="mono" en <html>.
+   ========================================================= */
+
+html.nova-skin-active[data-nova-theme="mono"] {
+  /* Fondo: capas de profundidad neutra */
+  --nova-bg-0: #0a0a0d;
+  --nova-bg-1: #101014;
+  --nova-bg-surface: rgba(16, 16, 21, 0.66);
+  --nova-bg-surface-solid: #121217;
+  --nova-bg-hover: rgba(255, 255, 255, 0.06);
+
+  /* Tinta: jerarquía en grises cálidos */
+  --nova-ink-0: #f2f2f5;
+  --nova-ink-1: #bcbcc5;
+  --nova-ink-2: #6e6e7a;
+  --nova-ink-3: rgba(242, 242, 245, 0.3);
+
+  /* Bordes: luz neutra, minimal */
+  --nova-line-0: rgba(190, 192, 205, 0.1);
+  --nova-line-1: rgba(190, 192, 205, 0.18);
+  --nova-line-2: rgba(212, 216, 230, 0.4);
+
+  /* Acentos: platino / acero (mono atenuado) */
+  --nova-accent-1: #c6cad6;
+  --nova-accent-2: #dfe3ee;
+  --nova-accent-3: #9aa0b3;
+  --nova-accent-ink: #17181d;
+  --nova-grad: linear-gradient(120deg, #9aa0b3 0%, #c6cad6 50%, #e4e8f2 100%);
+  --nova-grad-ink: linear-gradient(110deg, #b7bbca 0%, #d8dce8 50%, #eef1f8 100%);
+
+  /* Glow controlado — muy contenido */
+  --nova-glow-focus:
+    0 0 0 3px rgba(198, 202, 214, 0.12),
+    0 0 20px rgba(198, 202, 214, 0.08),
+    0 0 40px rgba(255, 255, 255, 0.03);
+  --nova-glow-hover:
+    0 0 0 1px rgba(198, 202, 214, 0.3),
+    0 4px 18px rgba(0, 0, 0, 0.28);
+  --nova-shadow-card:
+    0 1px 0 rgba(255, 255, 255, 0.03) inset,
+    0 12px 32px rgba(3, 3, 5, 0.5);
+
+  /* Selección / scrollbar / caret */
+  --nova-selection-bg: rgba(198, 202, 214, 0.3);
+  --nova-selection-ink: #ffffff;
+  --nova-scroll-thumb: rgba(198, 202, 214, 0.28);
+  --nova-scroll-thumb-hover: rgba(223, 227, 238, 0.4);
+  --nova-caret: #cfd3de;
+
+  /* Atmósfera: bruma neutra tenue, sin estrellas */
+  --nova-ambient-a: rgba(198, 202, 214, 0.06);
+  --nova-ambient-b: rgba(224, 227, 238, 0.04);
+  --nova-ambient-c: rgba(148, 152, 168, 0.05);
+  --nova-ambient-bg:
+    radial-gradient(
+      1000px 700px at 15% -15%,
+      var(--nova-ambient-a) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      860px 600px at 90% -10%,
+      var(--nova-ambient-b) 0%,
+      transparent 58%
+    ),
+    radial-gradient(
+      1200px 800px at 50% 120%,
+      var(--nova-ambient-c) 0%,
+      transparent 62%
+    ),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.018) 0%, transparent 30%);
+}

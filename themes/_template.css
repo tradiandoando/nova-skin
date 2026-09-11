@@ -1,0 +1,119 @@
+/* =========================================================
+   NOVA SKIN · PLANTILLA DE TEMA  (copy-paste para crear uno)
+   ---------------------------------------------------------
+   CÓMO CREAR UN TEMA EN 5 PASOS
+   1. Duplica este archivo y renómbralo  themes/<tu-tema>.css
+      (p. ej. themes/ice.css) y cambia "_template" por tu id
+      (únicamente minúsculas + guiones, p. ej. "ice").
+   2. Declara el archivo en manifest.json → content_scripts[0].
+      css (apéndalo a la lista), y añade "tu-id" al array
+      THEMES de content.js. Si quieres mostrarlo en el popup,
+      añade la entrada en GROUPS (popup.js).
+   3. Cambia SOLO los valores de los tokens. Cada token tiene
+      su comentario: qué es y dónde se consume. Empieza por
+      los 3 imprescindibles: --nova-bg-0, --nova-ink-0 y
+      --nova-accent-1, y comprueba en ChatGPT.
+   4. Verifica antes de terminar:  bash tools/check.sh
+   5. Como el archivo NO debe contener selectores DOM, solo
+      esta plantilla del bloque vale. FIN.
+
+   REGLAS OBLIGATORIAS
+   · Un único bloque html.nova-skin-active[data-nova-theme="…"]
+   · Solo propiedades --nova-* (más color-scheme si es claro).
+   · Valores siempre sobreescritos al completo (los fotogramas
+     previous/next de código NO existen: cada tema es atómico).
+   ========================================================= */
+
+html.nova-skin-active[data-nova-theme="_template"] {
+  /* --- ELEVACIÓN / PROFUNDIDAD DE CAPAS ------------------
+     Sombras de los elevadores: composer, sidebar, cards.
+     -ios (light): sustituye estas sombras negras por suaves
+     sombras color-accent o grises claras. */
+  --nova-elev-1:
+    0 1px 0 rgba(255, 255, 255, 0.035) inset,
+    0 6px 22px rgba(2, 3, 8, 0.45);
+  --nova-elev-2:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 10px 30px rgba(2, 3, 8, 0.55);
+  --nova-elev-3:
+    0 1px 0 rgba(255, 255, 255, 0.05) inset,
+    0 18px 44px rgba(2, 3, 8, 0.65);
+
+  /* --- FONDO: capas de profundidad -----------------------
+     bg-0 = lienzo del body (visible al transparentar la UI
+     original de ChatGPT, cf. docs/ARCHITECTURE.md). */
+  --nova-bg-0: #0a0a0e;
+  --nova-bg-1: #111116;                  /* paneles / sidebars */
+  --nova-bg-surface: rgba(16, 16, 22, 0.66);  /* over glass, translúcido */
+  --nova-bg-surface-solid: #131318;      /* over solid (dialogs) */
+  --nova-bg-hover: rgba(190, 190, 210, 0.07);  /* surcos hover */
+
+  /* --- TINTA: jerarquía de texto -------------------------
+     ink-0 = títulos / maimo contraste; ink-3 = placeholders. */
+  --nova-ink-0: #f2f2f6;
+  --nova-ink-1: #b9bcc8;
+  --nova-ink-2: #6d707e;
+  --nova-ink-3: rgba(242, 242, 246, 0.3);
+
+  /* --- BORDES / SEPARADORES ------------------------------
+     line-0 tenue, line-2 borde acentuado (focus). */
+  --nova-line-0: rgba(190, 194, 214, 0.1);
+  --nova-line-1: rgba(190, 194, 214, 0.18);
+  --nova-line-2: rgba(190, 194, 214, 0.45);
+
+  /* --- ACENTOS & GRADIENTES: la identidad del tema --------
+     1 = primario (botones, enlaces, focus); 2 = suave;
+     3 = complementario para gradientes. La atmósfera deriva
+     automáticamente del accent vía color-mix. */
+  --nova-accent-1: #9d9cf2;
+  --nova-accent-2: #c5a7ff;
+  --nova-accent-3: #88e3f0;
+  --nova-accent-ink: #101016;            /* texto SOBRE el accent */
+  --nova-grad: linear-gradient(120deg,
+    var(--nova-accent-1) 0%,
+    var(--nova-accent-2) 52%,
+    var(--nova-accent-3) 100%);
+  --nova-grad-ink: linear-gradient(110deg,
+    #b6b1ff 0%, #d1bcff 45%, #a8ecf5 100%);  /* grad sobre texto/iconos */
+
+  /* --- GLOW & ELEVACIÓN ----------------------------------
+     Aura de focus/hover. Mantén la tercera línea sutil para
+     no caer en 'gamer RGB'. */
+  --nova-glow-focus:
+    0 0 0 3px rgba(133, 131, 255, 0.16),
+    0 0 26px rgba(133, 131, 255, 0.13),
+    0 0 52px rgba(136, 227, 240, 0.05);
+  --nova-glow-hover:
+    0 0 0 1px rgba(133, 131, 255, 0.4),
+    0 4px 20px rgba(133, 131, 255, 0.14);
+  --nova-shadow-card:
+    0 1px 0 rgba(255, 255, 255, 0.03) inset,
+    0 12px 32px rgba(2, 3, 8, 0.55);
+
+  /* --- INPUTS (dentro del composer) ---------------------- */
+  --nova-surface-sunken: rgba(0, 0, 0, 0.3);   /* fondo principal */
+  --nova-input-bg-hover: rgba(255, 255, 255, 0.02);  /* hover */
+
+  /* --- SELECCIÓN / SCROLLBAR / CARET --------------------- */
+  --nova-selection-bg: rgba(133, 131, 255, 0.34);
+  --nova-selection-ink: #ffffff;
+  --nova-scroll-thumb: rgba(133, 131, 255, 0.3);
+  --nova-scroll-thumb-hover: rgba(136, 227, 240, 0.44);
+  --nova-caret: #b3a5ff;
+
+  /* --- ATMÓSFERA (nebulosas del body) ---------------------
+     Por defecto derivan del accent (color-mix), así que la
+     mayoría de temas NO las tocan. Overridealas SOLO si
+     necesitas estrellas, máscaras o velos custom. */
+  --nova-ambient-a: rgba(133, 131, 255, 0.08);
+  --nova-ambient-b: rgba(136, 227, 240, 0.06);
+  --nova-ambient-c: rgba(197, 167, 255, 0.07);
+  --nova-ambient-bg:
+    radial-gradient(1000px 700px at 12% -15%,
+      var(--nova-ambient-a) 0%, transparent 60%),
+    radial-gradient(860px 600px at 92% -10%,
+      var(--nova-ambient-b) 0%, transparent 58%),
+    radial-gradient(1200px 800px at 55% 120%,
+      var(--nova-ambient-c) 0%, transparent 62%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, transparent 30%);
+}

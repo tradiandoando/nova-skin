@@ -1,0 +1,102 @@
+/* =========================================================
+   NOVA SKIN · TEMA "NOVA LIGHT"
+   Violet · orchid · cyan — versión clara
+   v0.3.1
+   =========================================================
+   Variante clara del lenguaje visual NOVA: fondo blanco
+   cálido, acentos violeta/orquídea/cian con contraste
+   sobre luz. Override de tokens semánticos sobre el core.
+
+   Activar: data-nova-theme="nova-light" en <html>.
+   ========================================================= */
+
+html.nova-skin-active[data-nova-theme="nova-light"] {
+  color-scheme: light;
+
+  /* Fondo: capas de profundidad claras */
+  --nova-bg-0: #f5f6fa;
+  --nova-bg-1: #ffffff;
+  --nova-bg-surface: rgba(255, 255, 255, 0.72);
+  --nova-bg-surface-solid: #ffffff;
+  --nova-bg-hover: rgba(139, 124, 255, 0.08);
+
+  /* Tinta: la rampa se oscurece para contraste sobre luz */
+  --nova-ink-0: #101220;
+  --nova-ink-1: #3d3f54;
+  --nova-ink-2: #6e7490;
+  --nova-ink-3: rgba(16, 18, 32, 0.34);
+
+  /* Bordes: más marcados sobre fondo blanco */
+  --nova-line-0: rgba(100, 105, 150, 0.12);
+  --nova-line-1: rgba(100, 105, 150, 0.2);
+  --nova-line-2: rgba(139, 124, 255, 0.5);
+
+  /* Acentos & gradientes — acentos levemente más profundos
+     para mantener contraste de texto sobre blanco */
+  --nova-accent-1: #7b6cf0;
+  --nova-accent-2: #b57cef;
+  --nova-accent-3: #3dd4ef;
+  --nova-accent-ink: #ffffff;
+  --nova-grad: linear-gradient(120deg, #7b6cf0 0%, #b57cef 52%, #3dd4ef 100%);
+  --nova-grad-ink: linear-gradient(
+    110deg,
+    #8b7cff 0%,
+    #c58cff 45%,
+    #5ee7ff 100%
+  );
+
+  /* Elevación: sombras sutiles sobre luz (nada de negro profundo) */
+  --nova-elev-1:
+    0 1px 0 rgba(0, 0, 0, 0.04) inset,
+    0 8px 24px rgba(16, 18, 32, 0.08);
+  --nova-elev-2:
+    0 1px 0 rgba(0, 0, 0, 0.05) inset,
+    0 16px 48px rgba(16, 18, 32, 0.12);
+  --nova-elev-3:
+    0 1px 0 rgba(0, 0, 0, 0.06) inset,
+    0 24px 64px rgba(16, 18, 32, 0.16);
+
+  /* Glow controlado — más tenue sobre luz */
+  --nova-glow-focus:
+    0 0 0 3px rgba(139, 124, 255, 0.12),
+    0 0 20px rgba(139, 124, 255, 0.08),
+    0 0 40px rgba(94, 231, 255, 0.04);
+  --nova-glow-hover:
+    0 0 0 1px rgba(139, 124, 255, 0.25),
+    0 4px 16px rgba(139, 124, 255, 0.1);
+  --nova-shadow-card:
+    0 1px 0 rgba(0, 0, 0, 0.04) inset,
+    0 8px 24px rgba(16, 18, 32, 0.08);
+
+  /* Selección / scrollbar / caret */
+  --nova-selection-bg: rgba(139, 124, 255, 0.2);
+  --nova-selection-ink: #101220;
+  --nova-scroll-thumb: rgba(139, 124, 255, 0.25);
+  --nova-scroll-thumb-hover: rgba(139, 124, 255, 0.4);
+  --nova-caret: #8b7cff;
+
+  /* Surfaces reutilizables */
+  --nova-surface-sunken: rgba(0, 0, 0, 0.04);
+  --nova-input-bg-hover: rgba(0, 0, 0, 0.02);
+
+  /* Atmósfera: velos de color muy suaves sobre blanco */
+  --nova-ambient-a: rgba(139, 124, 255, 0.05);
+  --nova-ambient-b: rgba(94, 231, 255, 0.04);
+  --nova-ambient-c: rgba(197, 140, 255, 0.04);
+  --nova-ambient-bg:
+    radial-gradient(
+      1100px 720px at 8% -12%,
+      var(--nova-ambient-a) 0%,
+      transparent 58%
+    ),
+    radial-gradient(
+      900px 640px at 102% -6%,
+      var(--nova-ambient-b) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      1000px 700px at 52% 118%,
+      var(--nova-ambient-c) 0%,
+      transparent 62%
+    );
+}

@@ -1,0 +1,1211 @@
+/* =========================================================
+   NOVA SKIN — ChatGPT
+   Design system core · v0.2.1
+   =========================================================
+
+   Cómo funciona
+   ------------
+   · content.js agrega  .nova-skin-active  a <html> y setea
+     data-nova-theme="nova" | "cosmic" | "aurora" | ...
+   · TODO el CSS vive scopeado bajo html.nova-skin-active:
+     quitar la clase restaura la interfaz original (reversible).
+   · Los tokens son semánticos. Cada superficie usa capas
+     (fondo profundo → superficie translúcida → tinta/borde)
+     para no depender de selectores de clases de ChatGPT.
+
+   Agregar un tema nuevo (Neon, Ice, Sunset, Mono...)
+   ---------------------------------------------------
+   1) Crear  themes/<nombre>.css  que sobre-escriba los tokens
+      semánticos dentro de  html.nova-skin-active[data-nova-theme="..."];
+   2) declarar el archivo en "css" del manifest.json;
+   3) listar el tema en content.js (const THEMES).
+   ========================================================= */
+
+/* =========================================================
+   1 · TOKENS GLOBALES (no cromáticos — tema agnóstico)
+   ========================================================= */
+
+html.nova-skin-active {
+  color-scheme: dark;
+
+  --nova-font-body: "Inter", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --nova-font-display: "Space Grotesk", "Inter", ui-sans-serif, system-ui,
+    -apple-system, "Segoe UI", Roboto, sans-serif;
+  --nova-font-mono: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code",
+    Menlo, Consolas, "Liberation Mono", monospace;
+
+  --nova-radius-s: 8px;
+  --nova-radius-m: 12px;
+  --nova-radius-l: 18px;
+  --nova-radius-pill: 999px;
+
+  --nova-surface-blur: 16px;
+
+  /* Elevación — sistema de capas "spatial interface"
+     sunken → surface → elevated → overlay
+     Sombras profundas con retroceso marcado (elegante, no RGB). */
+  --nova-elev-0: none; /* sunken / plano */
+  --nova-elev-1:
+    0 1px 0 rgba(255, 255, 255, 0.05) inset,
+    0 14px 32px rgba(3, 4, 10, 0.45);
+  --nova-elev-2:
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 26px 56px rgba(3, 4, 10, 0.62);
+  --nova-elev-3:
+    0 1px 0 rgba(255, 255, 255, 0.07) inset,
+    0 40px 88px rgba(3, 4, 10, 0.78);
+
+  --nova-speed-fast: 140ms;
+  --nova-speed: 220ms;
+  --nova-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* =========================================================
+   2 · TEMA NOVA (default) — tokens semánticos
+   =========================================================
+   Paleta: violeta #8b7cff · orquídea #c58cff · cielo #5ee7ff
+   Glow controlado: solo focus / hover / selección.
+   ========================================================= */
+
+html.nova-skin-active {
+  /* Fondo: capas de profundidad */
+  --nova-bg-0: #070810;
+  --nova-bg-1: #0c0e18;
+  --nova-bg-surface: rgba(15, 17, 28, 0.66);
+  --nova-bg-surface-solid: #131521;
+  --nova-bg-hover: rgba(139, 124, 255, 0.09);
+
+  /* Tinta: jerarquía refinada
+     ink-primary  → texto principal, máxima presencia
+     ink-heading  → headings, labels prominentes
+     ink-body     → párrafos, listas, contenido secundario
+     ink-muted    → placeholders, timestamps, metadata
+     ink-accent   → elementos especiales, códigos inline */
+  /* Tinta: UNA sola rampa numérica (0 más brillante → 3 más tenue)
+     + aliases semánticos que derivan de ella. Los themes overridean
+     la rampa numérica y el DOM consume los aliases. */
+  --nova-ink-0: #f0f2ff;
+  --nova-ink-1: #c2c8db;
+  --nova-ink-2: #6e7490;
+  --nova-ink-3: rgba(238, 240, 248, 0.34);
+  --nova-ink-primary: var(--nova-ink-0);
+  --nova-ink-heading: var(--nova-ink-0);
+  --nova-ink-body: var(--nova-ink-1);
+  --nova-ink-muted: var(--nova-ink-2);
+  --nova-ink-accent: var(--nova-accent-2);
+
+  /* Bordes suaves con iluminación tenue */
+  --nova-line-0: rgba(152, 158, 196, 0.12);
+  --nova-line-1: rgba(152, 158, 196, 0.2);
+  --nova-line-2: rgba(139, 124, 255, 0.45);
+
+  /* Acentos & gradientes */
+  --nova-accent-1: #8b7cff;
+  --nova-accent-2: #c58cff;
+  --nova-accent-3: #5ee7ff;
+  --nova-accent-ink: #101220;
+  --nova-grad: linear-gradient(120deg, #8b7cff 0%, #c58cff 52%, #5ee7ff 100%);
+  --nova-grad-ink: linear-gradient(
+    110deg,
+    #a69bff 0%,
+    #d5a3ff 45%,
+    #86ecff 100%
+  );
+
+  /* Glow controlado */
+  --nova-glow-focus:
+    0 0 0 3px rgba(139, 124, 255, 0.16),
+    0 0 24px rgba(139, 124, 255, 0.13),
+    0 0 48px rgba(94, 231, 255, 0.055);
+  --nova-glow-hover:
+    0 0 0 1px rgba(139, 124, 255, 0.38),
+    0 4px 18px rgba(139, 124, 255, 0.16);
+  --nova-glow-active:
+    0 0 0 1px color-mix(in srgb, var(--nova-accent-1) 55%, transparent),
+    0 2px 12px color-mix(in srgb, var(--nova-accent-1) 25%, transparent),
+    0 0 36px color-mix(in srgb, var(--nova-accent-1) 12%, transparent);
+  --nova-shadow-card:
+    0 1px 0 rgba(255, 255, 255, 0.03) inset,
+    0 12px 32px rgba(3, 4, 10, 0.5);
+
+  /* Line glow — luz contenida DENTRO del borde (1px inset, sin halo exterior)
+     premium / spatial: la luz nace de la superficie, no se desborda. */
+  --nova-line-glow:
+    0 0 0 1px var(--nova-line-2) inset,
+    0 0 22px color-mix(in srgb, var(--nova-accent-1) 18%, transparent) inset;
+
+  /* Surfaces reutilizables + input wells */
+  --nova-surface-sunken: rgba(0, 0, 0, 0.3);
+  --nova-surface-elevated: var(--nova-bg-surface-solid);
+  --nova-surface-overlay: var(--nova-bg-surface-solid);
+
+  /* Inputs */
+  --nova-input-bg: var(--nova-surface-sunken);
+  --nova-input-bg-hover: rgba(255, 255, 255, 0.02);
+  --nova-input-radius: var(--nova-radius-m);
+  --nova-input-invalid: #ff6b6b;
+  --nova-input-valid: var(--nova-accent-3);
+
+  /* Selección / scrollbar / caret */
+  --nova-selection-bg: rgba(139, 124, 255, 0.34);
+  --nova-selection-ink: #ffffff;
+  --nova-scroll-thumb: rgba(139, 124, 255, 0.3);
+  --nova-scroll-thumb-hover: rgba(94, 231, 255, 0.46);
+  --nova-caret: #a89dff;
+
+  /* Atmósfera de página (capas de fondo) */
+  --nova-ambient-a: color-mix(in srgb, var(--nova-accent-1) 9%, transparent);
+  --nova-ambient-b: color-mix(in srgb, var(--nova-accent-3) 6%, transparent);
+  --nova-ambient-c: color-mix(in srgb, var(--nova-accent-2) 7%, transparent);
+  --nova-ambient-bg:
+    radial-gradient(
+      1100px 720px at 8% -12%,
+      var(--nova-ambient-a) 0%,
+      transparent 58%
+    ),
+    radial-gradient(
+      900px 640px at 102% -6%,
+      var(--nova-ambient-b) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      1000px 700px at 52% 118%,
+      var(--nova-ambient-c) 0%,
+      transparent 62%
+    );
+
+  /* Estados derivados — se autocontienen por tema.
+     Glows, presionado, overlay: todo nace del accent/bg del tema,
+     así ningún color hardcodea violeta/cian sobre cosmo o aurora. */
+  --nova-ink-em: color-mix(in srgb, var(--nova-ink-0) 40%, var(--nova-ink-1) 60%);
+  --nova-accent-hover: color-mix(in srgb, var(--nova-accent-3) 82%, #ffffff 18%);
+  --nova-glow-link: 0 0 16px color-mix(in srgb, var(--nova-accent-3) 32%, transparent);
+  --nova-glow-link-strong: 0 0 22px color-mix(in srgb, var(--nova-accent-3) 40%, transparent);
+  --nova-glow-heading: 0 0 28px color-mix(in srgb, var(--nova-accent-1) 14%, transparent);
+  --nova-glow-h3: 0 0 20px color-mix(in srgb, var(--nova-accent-2) 14%, transparent);
+  --nova-glow-strong: 0 0 14px color-mix(in srgb, var(--nova-accent-1) 12%, transparent);
+  --nova-glow-code: 0 0 10px color-mix(in srgb, var(--nova-accent-3) 12%, transparent);
+  --nova-bg-press: color-mix(in srgb, var(--nova-accent-1) 14%, transparent);
+  --nova-overlay-dim: color-mix(in srgb, var(--nova-bg-0) 62%, transparent);
+
+  /* Atmósfera de página — capas ::before / ::after.
+     Los temas las heredan derivadas de su accent/bg, o pueden
+     replantearlas por completo (scene hook). */
+  --nova-atmo-blur: 40px;
+  --nova-atmo-anim: 45s;
+  --nova-atmo-nebula-a: color-mix(in srgb, var(--nova-accent-1) 13%, transparent);
+  --nova-atmo-nebula-a-dim: color-mix(in srgb, var(--nova-accent-1) 5.5%, transparent);
+  --nova-atmo-nebula-b: color-mix(in srgb, var(--nova-accent-3) 7.5%, transparent);
+  --nova-atmo-nebula-b-dim: color-mix(in srgb, var(--nova-accent-3) 2.5%, transparent);
+  --nova-atmo-nebula-c: color-mix(in srgb, var(--nova-accent-2) 5.5%, transparent);
+  --nova-atmo-vignette: color-mix(in srgb, var(--nova-accent-1) 3.5%, transparent);
+  --nova-atmo-veil-top: color-mix(in srgb, var(--nova-bg-0) 5%, transparent);
+  --nova-atmo-veil-bottom: color-mix(in srgb, var(--nova-bg-0) 22%, transparent);
+}
+
+/* =========================================================
+   3 · PUENTE DE TOKENS NATIVOS CHATGPT (best effort)
+   ========================================================= */
+
+html.nova-skin-active {
+  --text-primary: var(--nova-ink-primary);
+  --text-secondary: var(--nova-ink-body);
+  --text-tertiary: var(--nova-ink-muted);
+  --main-surface-primary: var(--nova-bg-0);
+  --main-surface-secondary: var(--nova-bg-1);
+  --main-surface-tertiary: transparent;
+  --sidebar-surface-primary: var(--nova-bg-1);
+  --composer-surface-primary: var(--nova-bg-surface);
+  --selection: var(--nova-selection-bg);
+  --border-main: var(--nova-line-0);
+  --border-primary: var(--nova-line-1);
+  --border-white: var(--nova-line-0);
+
+  /* Puente de tokens modernos ChatGPT (React 19 / Tailwind v4) */
+  --canvas-background: var(--nova-bg-0);
+  --main-surface-background: var(--nova-bg-0);
+  --sidebar-background: var(--nova-bg-1);
+  --composer-background-color: transparent;
+  --bg-token-main-surface-primary: var(--nova-bg-0);
+}
+
+/* Los contenedores de superficie de ChatGPT son opacos y cubren
+   el fondo del <body>. Se transparentan para dejar ver la atmósfera NOVA. */
+html.nova-skin-active main,
+html.nova-skin-active main > div,
+html.nova-skin-active [data-testid="thread-container"],
+html.nova-skin-active [class*="thread"], 
+html.nova-skin-active [data-message-author-role] {
+  background-color: transparent !important;
+}
+
+/* Superficies token-mejoras de ChatGPT (bg-token-*, surface) transparentes */
+html.nova-skin-active [class*="bg-token"],
+html.nova-skin-active main [class*="surface-primary"],
+html.nova-skin-active main [class*="surface-secondary"] {
+  background-color: transparent !important;
+}
+
+html.nova-skin-active main * {
+  --main-surface-primary: transparent;
+  --main-surface-secondary: transparent;
+  --main-surface-tertiary: transparent;
+}
+
+
+
+/* =========================================================
+   4 · BASE / ATMÓSFERA
+   ========================================================= */
+
+html.nova-skin-active body {
+  background-color: var(--nova-bg-0) !important;
+  background-image: var(--nova-ambient-bg) !important;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  color: var(--nova-ink-primary);
+}
+
+/* =========================================================
+   5 · JERARQUÍA TIPOGRÁFICA v0.2.1
+   =========================================================
+   Jerarquía visual refinada:
+   · PRIMARY → máxima claridad y presencia
+   · SECONDARY → menor luminosidad
+   · MUTED → información contextual
+   · ACCENT → color NOVA
+   · ACTIVE → accent + glow
+   · SPECIAL → gradient + glow controlado
+   ========================================================= */
+
+html.nova-skin-active {
+  font-family: var(--nova-font-body);
+  text-rendering: optimizeLegibility;
+}
+
+/* --- HEADINGS: gradiente + glow sutil --- */
+
+html.nova-skin-active h1,
+html.nova-skin-active h2 {
+  color: transparent;
+  background: var(--nova-grad-ink);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: var(--nova-glow-heading);
+  letter-spacing: -0.02em;
+}
+
+html.nova-skin-active h3 {
+  color: var(--nova-accent-2);
+  text-shadow: var(--nova-glow-h3);
+  letter-spacing: -0.01em;
+  font-weight: 700;
+}
+
+html.nova-skin-active h4 {
+  color: var(--nova-ink-heading);
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+html.nova-skin-active h5,
+html.nova-skin-active h6 {
+  color: var(--nova-ink-body);
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+/* --- MARKDOWN: contenido del chat --- */
+
+/* Párrafos y listas: ink-body con luminosidad integrada */
+html.nova-skin-active .markdown p,
+html.nova-skin-active .markdown ul,
+html.nova-skin-active .markdown ol {
+  color: var(--nova-ink-body);
+}
+
+/* Strong: ink-primary + glow tenue para énfasis */
+html.nova-skin-active .markdown strong {
+  color: var(--nova-ink-primary);
+  font-weight: 650;
+  text-shadow: var(--nova-glow-strong);
+}
+
+/* Em: tinta suave, sin glow */
+html.nova-skin-active .markdown em {
+  color: var(--nova-ink-em);
+  font-style: italic;
+}
+
+/* --- LISTAS y elementos contextuales --- */
+
+html.nova-skin-active .markdown li {
+  color: var(--nova-ink-body);
+}
+
+html.nova-skin-active .markdown li::marker {
+  color: var(--nova-ink-muted);
+}
+
+/* Blockquote: borde accent + fondo sutil */
+html.nova-skin-active .markdown blockquote,
+html.nova-skin-active .markdown-prose blockquote {
+  border-left: 2px solid var(--nova-accent-2);
+  background: var(--nova-bg-hover);
+}
+
+/* Tablas: jerarquía header/celda */
+html.nova-skin-active .markdown table,
+html.nova-skin-active .markdown-prose table {
+  border-color: var(--nova-line-1);
+}
+
+html.nova-skin-active .markdown th,
+html.nova-skin-active .markdown-prose th {
+  color: var(--nova-ink-heading);
+  background: var(--nova-bg-1);
+}
+
+html.nova-skin-active .markdown td,
+html.nova-skin-active .markdown-prose td {
+  color: var(--nova-ink-body);
+}
+
+/* HR */
+html.nova-skin-active .markdown hr,
+html.nova-skin-active .markdown-prose hr {
+  border-color: var(--nova-line-0);
+}
+
+/* =========================================================
+   6 · LINKS
+   ========================================================= */
+
+html.nova-skin-active a {
+  color: var(--nova-accent-3) !important;
+  transition:
+    color var(--nova-speed-fast) var(--nova-ease),
+    text-shadow var(--nova-speed-fast) var(--nova-ease);
+}
+
+html.nova-skin-active a:hover {
+  color: var(--nova-accent-hover) !important;
+  text-shadow: var(--nova-glow-link);
+}
+
+html.nova-skin-active a:active {
+  text-shadow: var(--nova-glow-link-strong);
+}
+
+/* =========================================================
+   7 · SIDEBAR
+   ========================================================= */
+
+html.nova-skin-active #sidebar-container,
+html.nova-skin-active [data-testid="sidebar-container"],
+html.nova-skin-active nav[data-hydra-role="sidebar-nav"] {
+  background: var(--nova-bg-1) !important;
+  border-right: 1px solid var(--nova-line-0);
+}
+
+html.nova-skin-active #sidebar-container a,
+html.nova-skin-active [data-testid="sidebar-container"] a,
+html.nova-skin-active nav[data-hydra-role="sidebar-nav"] a {
+  color: var(--nova-ink-body);
+  transition:
+    background var(--nova-speed-fast) var(--nova-ease),
+    color var(--nova-speed-fast) var(--nova-ease);
+}
+
+html.nova-skin-active #sidebar-container a:hover,
+html.nova-skin-active [data-testid="sidebar-container"] a:hover,
+html.nova-skin-active nav[data-hydra-role="sidebar-nav"] a:hover {
+  background: var(--nova-bg-hover) !important;
+  color: var(--nova-ink-primary);
+}
+
+/* --- CONVERSATION ITEMS (tablero / historia) ---
+   hover = superficie elevada sutil · activo = accent contenida
+   + acento vertical de 2px a la izquierda. Nada de glow exterior. */
+html.nova-skin-active #history a[draggable="true"],
+html.nova-skin-active [data-testid*="conversation"] a[draggable="true"] {
+  position: relative;
+  color: var(--nova-ink-body);
+  border: 1px solid transparent;
+  border-radius: var(--nova-radius-m);
+  transition:
+    background var(--nova-speed-fast) var(--nova-ease),
+    color var(--nova-speed-fast) var(--nova-ease),
+    border-color var(--nova-speed-fast) var(--nova-ease),
+    box-shadow var(--nova-speed-fast) var(--nova-ease);
+}
+
+html.nova-skin-active #history a[draggable="true"]:hover,
+html.nova-skin-active [data-testid*="conversation"] a[draggable="true"]:hover {
+  background: var(--nova-bg-hover) !important;
+  border-color: var(--nova-line-0);
+  color: var(--nova-ink-primary);
+}
+
+html.nova-skin-active #history a[draggable="true"][aria-current="page"],
+html.nova-skin-active [data-testid*="conversation"] a[draggable="true"][aria-current="page"] {
+  background: color-mix(in srgb, var(--nova-accent-1) 8%, transparent);
+  border-color: var(--nova-line-1);
+  color: var(--nova-ink-heading);
+  box-shadow: var(--nova-line-glow), var(--nova-elev-2);
+}
+
+/* Acento vertical izquierdo en el item activo */
+html.nova-skin-active #history a[draggable="true"][aria-current="page"]::before,
+html.nova-skin-active [data-testid*="conversation"] a[draggable="true"][aria-current="page"]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 18%;
+  bottom: 18%;
+  width: 2px;
+  border-radius: var(--nova-radius-pill);
+  background: var(--nova-grad);
+  opacity: 0.85;
+}
+
+/* =========================================================
+   8 · TOP BAR
+   ========================================================= */
+
+html.nova-skin-active [data-testid="topbar-header"] {
+  background: var(--nova-bg-surface) !important;
+  backdrop-filter: blur(var(--nova-surface-blur));
+  -webkit-backdrop-filter: blur(var(--nova-surface-blur));
+  border-bottom: 1px solid var(--nova-line-0);
+}
+
+/* =========================================================
+   9 · COMPOSER (panel de vidrio)
+   ========================================================= */
+
+html.nova-skin-active #composer-background,
+html.nova-skin-active .composer-parent,
+html.nova-skin-active main form[data-type="unified-composer"],
+html.nova-skin-active #thread-bottom-container form,
+html.nova-skin-active [data-testid*="composer"] form,
+html.nova-skin-active form:has(#prompt-textarea) {
+  background: var(--nova-bg-surface) !important;
+  backdrop-filter: blur(var(--nova-surface-blur));
+  -webkit-backdrop-filter: blur(var(--nova-surface-blur));
+  border: 1px solid var(--nova-line-1);
+  border-radius: var(--nova-radius-l);
+  box-shadow: var(--nova-elev-2);
+}
+
+html.nova-skin-active #composer-background:focus-within,
+html.nova-skin-active .composer-parent:focus-within {
+  border-color: var(--nova-line-2);
+  box-shadow: var(--nova-line-glow);
+}
+
+html.nova-skin-active #prompt-textarea,
+html.nova-skin-active [contenteditable="true"] {
+  color: var(--nova-ink-primary);
+  caret-color: var(--nova-caret);
+}
+
+html.nova-skin-active #prompt-textarea::placeholder,
+html.nova-skin-active [contenteditable="true"]::placeholder,
+html.nova-skin-active [data-placeholder] {
+  color: var(--nova-ink-muted);
+}
+
+/* =========================================================
+   9b · INPUTS GENÉRICOS + ESTADOS
+   Base "sunken" (hundida) · focus = borde accent + glow interior
+   ========================================================= */
+
+html.nova-skin-active input:not([type="range"]):not([type="color"]):not([type="checkbox"]):not([type="radio"]),
+html.nova-skin-active textarea,
+html.nova-skin-active select {
+  background: var(--nova-input-bg);
+  border: 1px solid var(--nova-line-1);
+  border-radius: var(--nova-input-radius);
+  color: var(--nova-ink-primary);
+  caret-color: var(--nova-caret);
+  box-shadow: var(--nova-elev-0);
+  transition:
+    border-color var(--nova-speed-fast) var(--nova-ease),
+    background var(--nova-speed-fast) var(--nova-ease),
+    box-shadow var(--nova-speed-fast) var(--nova-ease);
+}
+
+html.nova-skin-active input:not([type="range"]):not([type="color"]):not([type="checkbox"]):not([type="radio"]):hover,
+html.nova-skin-active textarea:hover,
+html.nova-skin-active select:hover {
+  background: var(--nova-input-bg-hover);
+}
+
+/* Focus: borde accent + glow contenido dentro del borde (sin halo) */
+html.nova-skin-active input:not([type="range"]):not([type="color"]):not([type="checkbox"]):not([type="radio"]):focus,
+html.nova-skin-active textarea:focus,
+html.nova-skin-active select:focus {
+  outline: none;
+  border-color: var(--nova-line-2);
+  background: var(--nova-input-bg);
+  box-shadow: var(--nova-line-glow);
+}
+
+/* Error */
+html.nova-skin-active input:not([type="range"]):not([type="checkbox"]):not([type="radio"]):invalid:not(:placeholder-shown),
+html.nova-skin-active input[aria-invalid="true"],
+html.nova-skin-active textarea:invalid:not(:placeholder-shown),
+html.nova-skin-active textarea[aria-invalid="true"],
+html.nova-skin-active select:invalid {
+  border-color: var(--nova-input-invalid);
+  box-shadow: 0 0 0 1px var(--nova-input-invalid) inset;
+}
+
+/* Disabled */
+html.nova-skin-active input:disabled,
+html.nova-skin-active textarea:disabled,
+html.nova-skin-active select:disabled,
+html.nova-skin-active input[readonly],
+html.nova-skin-active textarea[readonly] {
+  opacity: 0.55;
+  filter: saturate(0.4);
+  cursor: not-allowed;
+}
+
+/* Labels de inputs */
+html.nova-skin-active label {
+  color: var(--nova-ink-heading);
+  font-weight: 500;
+}
+
+/* =========================================================
+   10 · BOTONES & CONTROLES
+   ========================================================= */
+
+/* CTA principal (enviar) */
+html.nova-skin-active button[data-testid*="send-button"],
+html.nova-skin-active button[aria-label="Send prompt"] {
+  background: var(--nova-grad) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: var(--nova-accent-ink) !important;
+  box-shadow: none;
+  transition:
+    box-shadow var(--nova-speed) var(--nova-ease),
+    filter var(--nova-speed) var(--nova-ease),
+    transform var(--nova-speed-fast) var(--nova-ease);
+}
+
+html.nova-skin-active button[data-testid*="send-button"]:hover,
+html.nova-skin-active button[aria-label="Send prompt"]:hover {
+  box-shadow: var(--nova-glow-hover);
+  filter: brightness(1.06);
+}
+
+html.nova-skin-active button[data-testid*="send-button"]:active,
+html.nova-skin-active button[aria-label="Send prompt"]:active {
+  box-shadow: var(--nova-glow-active);
+  transform: scale(0.97);
+}
+
+html.nova-skin-active button[data-testid*="send-button"]:disabled,
+html.nova-skin-active button[aria-label="Send prompt"]:disabled {
+  opacity: 0.45;
+  filter: grayscale(0.35);
+}
+
+/* Controles secundarios dentro del composer */
+html.nova-skin-active main form button,
+html.nova-skin-active #composer-background button {
+  color: var(--nova-ink-body);
+  background: transparent;
+  border-radius: var(--nova-radius-m);
+  transition:
+    background var(--nova-speed-fast) var(--nova-ease),
+    color var(--nova-speed-fast) var(--nova-ease),
+    box-shadow var(--nova-speed-fast) var(--nova-ease);
+}
+
+html.nova-skin-active main form button:hover,
+html.nova-skin-active #composer-background button:hover {
+  background: var(--nova-bg-hover);
+  color: var(--nova-ink-primary);
+}
+
+html.nova-skin-active main form button:active,
+html.nova-skin-active #composer-background button:active {
+  background: var(--nova-bg-press);
+  color: var(--nova-ink-heading);
+}
+
+/* --- BOTONES GHOST / OUTLINE / ICON ---
+   Variantes de botón del sistema NOVA. Se aplican como
+   utilidades o a elementos marcados con las clases .nova-btn--*,
+   y a botones de icono por dimensión. Elevación sutil, sin glow exterior. */
+
+/* Base: ghost (por defecto) */
+html.nova-skin-active .nova-btn--ghost,
+html.nova-skin-active button[aria-label]:not([data-testid*="send-button"]):not([aria-label="Send prompt"]):not([aria-label="Send"]):not([aria-label="Stop streaming"]):not([aria-label="Stop"]) {
+  background: transparent;
+  color: var(--nova-ink-body);
+  border: 1px solid transparent;
+  border-radius: var(--nova-radius-m);
+  transition:
+    background var(--nova-speed-fast) var(--nova-ease),
+    color var(--nova-speed-fast) var(--nova-ease),
+    border-color var(--nova-speed-fast) var(--nova-ease),
+    box-shadow var(--nova-speed-fast) var(--nova-ease);
+}
+
+html.nova-skin-active .nova-btn--ghost:hover,
+html.nova-skin-active button[aria-label]:not([data-testid*="send-button"]):not([aria-label="Send prompt"]):not([aria-label="Send"]):not([aria-label="Stop streaming"]):not([aria-label="Stop"]):hover {
+  background: var(--nova-bg-hover);
+  color: var(--nova-ink-primary);
+}
+
+/* Outline: borde visible, acentúa en hover */
+html.nova-skin-active .nova-btn--outline {
+  background: transparent;
+  color: var(--nova-ink-body);
+  border: 1px solid var(--nova-line-1);
+  border-radius: var(--nova-radius-m);
+  transition:
+    background var(--nova-speed-fast) var(--nova-ease),
+    color var(--nova-speed-fast) var(--nova-ease),
+    border-color var(--nova-speed-fast) var(--nova-ease),
+    box-shadow var(--nova-speed-fast) var(--nova-ease);
+}
+
+html.nova-skin-active .nova-btn--outline:hover {
+  background: var(--nova-bg-hover);
+  border-color: var(--nova-line-2);
+  color: var(--nova-ink-heading);
+  box-shadow: var(--nova-line-glow);
+}
+
+html.nova-skin-active .nova-btn--outline:focus-visible {
+  border-color: var(--nova-line-2);
+  box-shadow: var(--nova-line-glow);
+}
+
+/* Icon: cuadrado compacto, sin relleno hasta hover */
+html.nova-skin-active .nova-btn--icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  background: transparent;
+  color: var(--nova-ink-body);
+  border: 1px solid transparent;
+  border-radius: var(--nova-radius-m);
+  transition:
+    background var(--nova-speed-fast) var(--nova-ease),
+    color var(--nova-speed-fast) var(--nova-ease),
+    border-color var(--nova-speed-fast) var(--nova-ease),
+    box-shadow var(--nova-speed-fast) var(--nova-ease);
+}
+
+html.nova-skin-active .nova-btn--icon:hover {
+  background: var(--nova-bg-hover);
+  color: var(--nova-ink-primary);
+  border-color: var(--nova-line-0);
+}
+
+html.nova-skin-active .nova-btn--icon:active {
+  background: var(--nova-bg-hover);
+  color: var(--nova-ink-heading);
+}
+
+/* =========================================================
+   11 · CÓDIGO
+   ========================================================= */
+
+/* Código en línea */
+html.nova-skin-active :not(pre) > code {
+  font-family: var(--nova-font-mono);
+  font-size: 0.88em;
+  color: var(--nova-accent-3);
+  background: var(--nova-bg-hover);
+  border: 1px solid var(--nova-line-0);
+  border-radius: var(--nova-radius-s);
+  padding: 0.1em 0.35em;
+  text-shadow: var(--nova-glow-code);
+}
+
+/* Bloques de código */
+html.nova-skin-active pre,
+html.nova-skin-active .markdown pre {
+  font-family: var(--nova-font-mono);
+  background: var(--nova-bg-1) !important;
+  border: 1px solid var(--nova-line-0);
+  border-radius: var(--nova-radius-m);
+  box-shadow: var(--nova-elev-1);
+}
+
+/* =========================================================
+   12 · FOCO · SELECCIÓN · SCROLLBAR
+   ========================================================= */
+
+html.nova-skin-active *:focus-visible {
+  outline: 1px solid var(--nova-accent-2) !important;
+  outline-offset: 1px;
+  box-shadow: var(--nova-line-glow) !important;
+}
+
+html.nova-skin-active ::selection {
+  background: var(--nova-selection-bg);
+  color: var(--nova-selection-ink);
+}
+
+html.nova-skin-active,
+html.nova-skin-active * {
+  scrollbar-color: var(--nova-scroll-thumb) transparent;
+}
+
+html.nova-skin-active ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+html.nova-skin-active ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+html.nova-skin-active ::-webkit-scrollbar-thumb {
+  background: var(--nova-scroll-thumb);
+  border-radius: var(--nova-radius-pill);
+}
+
+html.nova-skin-active ::-webkit-scrollbar-thumb:hover {
+  background: var(--nova-scroll-thumb-hover);
+}
+
+html.nova-skin-active ::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* =========================================================
+   12b · OLEADA 2 — SISTEMA DE COMPONENTES
+   Modals/overlays · Dropdowns/tooltips · Toasts · Toggles · Avatars
+   Reutiliza elevación, surfaces, line-glow y estados de Oleada 1.
+   ========================================================= */
+
+/* --- MODALS / OVERLAYS · Dialogo Radix portaleado a body --- */
+html.nova-skin-active [role="dialog"],
+html.nova-skin-active [role="alertdialog"],
+html.nova-skin-active [data-radix-dialog-content] {
+  background: var(--nova-surface-overlay) !important;
+  border: 1px solid var(--nova-line-1);
+  border-radius: var(--nova-radius-l);
+  box-shadow: var(--nova-elev-3);
+  color: var(--nova-ink-primary);
+}
+
+html.nova-skin-active [data-radix-dialog-overlay],
+html.nova-skin-active [role="presentation"]:has([data-radix-dialog-content]) {
+  background: var(--nova-overlay-dim) !important;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* --- DROPDOWNS / TOOLTIPS · menús y popovers Radix --- */
+html.nova-skin-active [role="menu"],
+html.nova-skin-active [role="listbox"],
+html.nova-skin-active [role="tooltip"],
+html.nova-skin-active [data-radix-menu-content],
+html.nova-skin-active [data-radix-popper-content-wrapper] > div {
+  background: var(--nova-surface-elevated) !important;
+  border: 1px solid var(--nova-line-1);
+  border-radius: var(--nova-radius-m);
+  box-shadow: var(--nova-elev-2);
+  color: var(--nova-ink-body);
+}
+
+html.nova-skin-active [role="menuitem"],
+html.nova-skin-active [role="option"] {
+  color: var(--nova-ink-body);
+  border-radius: var(--nova-radius-s);
+  transition:
+    background var(--nova-speed-fast) var(--nova-ease),
+    color var(--nova-speed-fast) var(--nova-ease);
+}
+
+html.nova-skin-active [role="menuitem"]:hover,
+html.nova-skin-active [role="menuitem"][data-highlighted],
+html.nova-skin-active [role="option"]:hover,
+html.nova-skin-active [role="option"][data-selected],
+html.nova-skin-active [role="option"][aria-selected="true"] {
+  background: var(--nova-bg-hover) !important;
+  color: var(--nova-ink-primary);
+}
+
+/* --- TOASTS · notificaciones Radix --- */
+html.nova-skin-active [role="status"],
+html.nova-skin-active [role="alert"],
+html.nova-skin-active [data-radix-toast-viewport] [data-radix-toast] {
+  background: var(--nova-surface-elevated) !important;
+  border: 1px solid var(--nova-line-1);
+  border-radius: var(--nova-radius-m);
+  box-shadow: var(--nova-elev-2);
+  color: var(--nova-ink-body);
+}
+
+html.nova-skin-active [role="status"]::after,
+html.nova-skin-active [data-radix-toast]::after {
+  content: "";
+  display: block;
+  height: 2px;
+  border-radius: var(--nova-radius-pill);
+  background: var(--nova-grad);
+  margin-top: 0.5rem;
+  opacity: 0.8;
+}
+
+/* --- TOGGLE SWITCHES · Radix Switch --- */
+html.nova-skin-active [role="switch"] {
+  position: relative;
+  width: 38px;
+  height: 22px;
+  border-radius: var(--nova-radius-pill);
+  background: var(--nova-surface-sunken);
+  border: 1px solid var(--nova-line-1);
+  transition:
+    background var(--nova-speed) var(--nova-ease),
+    border-color var(--nova-speed) var(--nova-ease),
+    box-shadow var(--nova-speed) var(--nova-ease);
+}
+
+html.nova-skin-active [role="switch"][data-state="checked"] {
+  background: var(--nova-bg-hover);
+  border-color: var(--nova-line-2);
+  box-shadow: var(--nova-line-glow);
+}
+
+html.nova-skin-active [role="switch"]::after,
+html.nova-skin-active [role="switch"] > [data-radix-switch-thumb] {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: var(--nova-radius-pill);
+  background: var(--nova-ink-muted);
+  box-shadow: var(--nova-elev-1);
+  transition:
+    transform var(--nova-speed) var(--nova-ease),
+    background var(--nova-speed) var(--nova-ease);
+}
+
+html.nova-skin-active [role="switch"][data-state="checked"]::after,
+html.nova-skin-active [role="switch"][data-state="checked"] > [data-radix-switch-thumb] {
+  background: var(--nova-accent-1);
+  transform: translateX(16px);
+}
+
+/* --- AVATARS --- */
+html.nova-skin-active img[alt*="avatar"],
+html.nova-skin-active [data-radix-avatar] img,
+html.nova-skin-active button[data-testid="accounts-profile-button"] img {
+  border-radius: 50%;
+  border: 1px solid var(--nova-line-0);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 1px 2px rgba(3, 4, 10, 0.4);
+}
+
+html.nova-skin-active [data-radix-avatar] {
+  background: var(--nova-bg-hover);
+  border: 1px solid var(--nova-line-0);
+}
+
+/* =========================================================
+   13 · UTILIDADES (bloques reutilizables)
+   ========================================================= */
+
+html.nova-skin-active .nova-text-grad {
+  background: var(--nova-grad-ink);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+html.nova-skin-active .nova-surface {
+  background: var(--nova-bg-surface);
+  border: 1px solid var(--nova-line-1);
+  border-radius: var(--nova-radius-m);
+  box-shadow: var(--nova-elev-1);
+}
+
+/* Sistema de superficies reutilizable — capas espaciales */
+html.nova-skin-active .nova-surface--sunken {
+  background: var(--nova-surface-sunken);
+  border: 1px solid var(--nova-line-0);
+  border-radius: var(--nova-input-radius);
+  box-shadow: var(--nova-elev-0);
+}
+
+html.nova-skin-active .nova-surface--elevated {
+  background: var(--nova-surface-elevated);
+  border: 1px solid var(--nova-line-1);
+  border-radius: var(--nova-radius-m);
+  box-shadow: var(--nova-elev-2);
+}
+
+html.nova-skin-active .nova-surface--overlay {
+  background: var(--nova-surface-overlay);
+  border: 1px solid var(--nova-line-1);
+  border-radius: var(--nova-radius-l);
+  box-shadow: var(--nova-elev-3);
+  backdrop-filter: blur(var(--nova-surface-blur));
+  -webkit-backdrop-filter: blur(var(--nova-surface-blur));
+}
+
+/* Utilidades de elevación directas */
+html.nova-skin-active .nova-elev-1 { box-shadow: var(--nova-elev-1); }
+html.nova-skin-active .nova-elev-2 { box-shadow: var(--nova-elev-2); }
+html.nova-skin-active .nova-elev-3 { box-shadow: var(--nova-elev-3); }
+
+/* =========================================================
+   14 · NOVA ATMOSPHERE
+   Fondo ambiental — nebulosas y bruma luminosa
+   ========================================================= */
+
+html.nova-skin-active::before {
+  content: "";
+  position: fixed;
+  inset: -8%;
+  z-index: -2;
+  pointer-events: none;
+
+  will-change: transform;
+
+  background:
+    radial-gradient(
+      circle at 18% 22%,
+      var(--nova-atmo-nebula-a) 0%,
+      var(--nova-atmo-nebula-a-dim) 22%,
+      transparent 48%
+    ),
+    radial-gradient(
+      circle at 82% 72%,
+      var(--nova-atmo-nebula-b) 0%,
+      var(--nova-atmo-nebula-b-dim) 24%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 55% 38%,
+      var(--nova-atmo-nebula-c) 0%,
+      transparent 42%
+    );
+
+  filter: blur(var(--nova-atmo-blur));
+  transform: translate3d(0, 0, 0);
+  animation: nova-atmosphere-drift var(--nova-atmo-anim) ease-in-out infinite alternate;
+}
+
+html.nova-skin-active::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+
+  background:
+    radial-gradient(
+      circle at 50% 0%,
+      var(--nova-atmo-vignette),
+      transparent 42%
+    ),
+    linear-gradient(
+      180deg,
+      var(--nova-atmo-veil-top),
+      var(--nova-atmo-veil-bottom)
+    );
+}
+
+@keyframes nova-atmosphere-drift {
+  0% {
+    transform: translate3d(-2%, -1%, 0) scale(1);
+  }
+
+  50% {
+    transform: translate3d(1%, 2%, 0) scale(1.03);
+  }
+
+  100% {
+    transform: translate3d(2%, -1%, 0) scale(1.02);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.nova-skin-active::before {
+    animation: none;
+  }
+
+  html.nova-skin-active,
+  html.nova-skin-active * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* --- FX OFF · Modo rendimiento ---
+   data-nova-fx="off" apaga la atmósfera completa (::before / ::after)
+   y convierte los tokens de velocidad NOVA a 0 ms, matando todo el
+   movimiento propio sin tocar las animaciones nativas de ChatGPT
+   (como los dots de streaming). Reversible al instante. */
+html.nova-skin-active[data-nova-fx="off"]::before,
+html.nova-skin-active[data-nova-fx="off"]::after {
+  display: none;
+}
+
+html.nova-skin-active[data-nova-fx="off"] {
+  --nova-speed-fast: 0ms;
+  --nova-speed: 0ms;
+}
+
+/* =========================================================
+   15 · AREAS HUÉRFANAS — tool-use · streaming · bienvenida
+   Selectores basados en data-testid confirmados (2025/2026).
+   ========================================================= */
+
+/* --- TOOL-USE / FUNCTION-CALL CARDS ---
+   Tarjetas inline: "Searching the web", DALL·E, code interpreter,
+   canvas/artifact. Prefijo "tool-call" para no tocar tooltips/toolbars. */
+html.nova-skin-active [data-testid*="tool-call"],
+html.nova-skin-active [data-testid*="tool-run"],
+html.nova-skin-active [data-testid*="connector"],
+html.nova-skin-active [data-testid*="canvas"],
+html.nova-skin-active [data-testid*="browse"],
+html.nova-skin-active [data-testid*="artifact"] {
+  background: var(--nova-surface-elevated) !important;
+  border: 1px solid var(--nova-line-1);
+  border-radius: var(--nova-radius-m);
+  box-shadow: var(--nova-elev-1);
+  color: var(--nova-ink-body);
+}
+
+/* Tool-call pill / status badges */
+html.nova-skin-active [data-testid*="tool-call-pill"],
+html.nova-skin-active [data-testid*="tool-call-status"] {
+  background: var(--nova-bg-hover);
+  border: 1px solid var(--nova-line-0);
+  border-radius: var(--nova-radius-pill);
+  color: var(--nova-ink-accent);
+}
+
+/* Tool-use section headers / divider lines */
+html.nova-skin-active [data-testid*="tool-call"] > hr,
+html.nova-skin-active [data-testid*="tool-call"] [role="separator"] {
+  border-color: var(--nova-line-0);
+}
+
+/* --- STREAMING: STOP BUTTON + TYPING DOTS ---
+   El botón Stop usa data-testid="stop-button" (confirmado).
+   Los dots de streaming son containers de animación inline. */
+html.nova-skin-active button[data-testid="stop-button"] {
+  background: var(--nova-surface-elevated) !important;
+  border: 1px solid var(--nova-line-1) !important;
+  border-radius: var(--nova-radius-pill) !important;
+  color: var(--nova-ink-primary) !important;
+  box-shadow: var(--nova-elev-1);
+  transition:
+    background var(--nova-speed-fast) var(--nova-ease),
+    border-color var(--nova-speed-fast) var(--nova-ease),
+    box-shadow var(--nova-speed-fast) var(--nova-ease);
+}
+
+html.nova-skin-active button[data-testid="stop-button"]:hover {
+  background: var(--nova-bg-hover) !important;
+  border-color: var(--nova-line-2) !important;
+  box-shadow: var(--nova-line-glow);
+}
+
+html.nova-skin-active button[data-testid="stop-button"]:active {
+  background: var(--nova-bg-press) !important;
+}
+
+/* Typing / streaming dots animation */
+html.nova-skin-active [data-testid*="streaming"],
+html.nova-skin-active [data-testid*="typing"] {
+  color: var(--nova-ink-muted);
+}
+
+/* --- BIENVENIDA / SUGGESTION CARDS ---
+   Pantalla "What can I help with?" + tarjetas de sugerencia. */
+html.nova-skin-active [data-testid*="welcome"],
+html.nova-skin-active [data-testid*="suggestion"],
+html.nova-skin-active [data-testid*="starter"] {
+  color: var(--nova-ink-body);
+}
+
+html.nova-skin-active [data-testid*="suggestion"] > div,
+html.nova-skin-active [data-testid*="starter"] > div,
+html.nova-skin-active [data-testid*="welcome"] [role="button"] {
+  background: var(--nova-surface-elevated);
+  border: 1px solid var(--nova-line-1);
+  border-radius: var(--nova-radius-m);
+  box-shadow: var(--nova-elev-1);
+  color: var(--nova-ink-body);
+  transition:
+    background var(--nova-speed-fast) var(--nova-ease),
+    border-color var(--nova-speed-fast) var(--nova-ease),
+    box-shadow var(--nova-speed-fast) var(--nova-ease);
+}
+
+html.nova-skin-active [data-testid*="suggestion"] > div:hover,
+html.nova-skin-active [data-testid*="starter"] > div:hover,
+html.nova-skin-active [data-testid*="welcome"] [role="button"]:hover {
+  background: var(--nova-bg-hover);
+  border-color: var(--nova-line-2);
+  box-shadow: var(--nova-line-glow);
+}
+
+/* --- CODE BLOCK HEADER CHROME ---
+   Botón copiar en code blocks (estilo ghost consistente).
+   El header de idioma hereda bg-1 del pre (ya skineado en §11). */
+html.nova-skin-active pre button[aria-label*="Copy"],
+html.nova-skin-active pre button[aria-label*="copy"],
+html.nova-skin-active .markdown pre button[aria-label*="Copy"],
+html.nova-skin-active .markdown pre button[aria-label*="copy"] {
+  background: transparent;
+  color: var(--nova-ink-muted);
+  border-radius: var(--nova-radius-s);
+  transition:
+    background var(--nova-speed-fast) var(--nova-ease),
+    color var(--nova-speed-fast) var(--nova-ease);
+}
+
+html.nova-skin-active pre button[aria-label*="Copy"]:hover,
+html.nova-skin-active pre button[aria-label*="copy"]:hover,
+html.nova-skin-active .markdown pre button[aria-label*="Copy"]:hover,
+html.nova-skin-active .markdown pre button[aria-label*="copy"]:hover {
+  background: var(--nova-bg-hover);
+  color: var(--nova-ink-primary);
+}
+
+/* --- IMAGE RESPONSES ---
+   Imágenes generadas por DALL·E o subidas por el usuario. */
+html.nova-skin-active img[alt*="Generated"],
+html.nova-skin-active img[alt*="DALL"],
+html.nova-skin-active [data-testid*="image-gen"] img,
+html.nova-skin-active [data-testid*="dalle"] img {
+  border-radius: var(--nova-radius-m);
+  border: 1px solid var(--nova-line-0);
+  box-shadow: var(--nova-elev-1);
+}
+
+/* Image gallery / lightbox overlay */
+html.nova-skin-active [data-testid*="image-gallery"],
+html.nova-skin-active [data-testid*="lightbox"] {
+  background: var(--nova-surface-overlay) !important;
+  border-radius: var(--nova-radius-l);
+  box-shadow: var(--nova-elev-3);
+}

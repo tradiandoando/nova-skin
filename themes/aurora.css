@@ -1,0 +1,93 @@
+/* =========================================================
+   NOVA SKIN · TEMA "AURORA"
+   Boreal · teal / aqua / ice
+   v0.2.0
+   =========================================================
+   Variante del lenguaje visual NOVA con atmósfera de aurora
+   boreal: fondo teal profundo, velos verdes/cielo y un toque
+   de violeta helado. Override de tokens semánticos sobre el
+   core.
+
+   Activar: data-nova-theme="aurora" en <html>.
+   ========================================================= */
+
+html.nova-skin-active[data-nova-theme="aurora"] {
+  /* Fondo: capas de profundidad */
+  --nova-bg-0: #040a0e;
+  --nova-bg-1: #071117;
+  --nova-bg-surface: rgba(8, 18, 24, 0.66);
+  --nova-bg-surface-solid: #0a161e;
+  --nova-bg-hover: rgba(79, 224, 196, 0.12);
+
+  /* Tinta: jerarquía */
+  --nova-ink-0: #eef7f6;
+  --nova-ink-1: #b3c9c6;
+  --nova-ink-2: #78918e;
+  --nova-ink-3: rgba(238, 247, 246, 0.32);
+
+  /* Bordes suaves con iluminación tenue */
+  --nova-line-0: rgba(125, 200, 190, 0.12);
+  --nova-line-1: rgba(125, 200, 190, 0.2);
+  --nova-line-2: rgba(79, 224, 196, 0.5);
+
+  /* Acentos & gradientes */
+  --nova-accent-1: #4fe0c4;
+  --nova-accent-2: #7db8ff;
+  --nova-accent-3: #66e3d8;
+  --nova-accent-ink: #062026;
+  --nova-grad: linear-gradient(120deg, #4fe0c4 0%, #3ec7d8 50%, #7db8ff 100%);
+  --nova-grad-ink: linear-gradient(
+    110deg,
+    #6ff0d4 0%,
+    #63d9e6 48%,
+    #9cc6ff 100%
+  );
+
+  /* Glow controlado */
+  --nova-glow-focus:
+    0 0 0 3px rgba(79, 224, 196, 0.16),
+    0 0 26px rgba(79, 224, 196, 0.12),
+    0 0 52px rgba(125, 184, 255, 0.05);
+  --nova-glow-hover:
+    0 0 0 1px rgba(79, 224, 196, 0.4),
+    0 4px 20px rgba(79, 224, 196, 0.14);
+  --nova-shadow-card:
+    0 1px 0 rgba(255, 255, 255, 0.03) inset,
+    0 12px 32px rgba(2, 8, 10, 0.55);
+
+  /* Selección / scrollbar / caret */
+  --nova-selection-bg: rgba(64, 219, 200, 0.33);
+  --nova-selection-ink: #ffffff;
+  --nova-scroll-thumb: rgba(79, 224, 196, 0.3);
+  --nova-scroll-thumb-hover: rgba(102, 227, 216, 0.46);
+  --nova-caret: #5fe6cc;
+
+  /* Atmósfera: velos de aurora boreal */
+  --nova-ambient-a: rgba(79, 224, 196, 0.1);
+  --nova-ambient-b: rgba(125, 184, 255, 0.07);
+  --nova-ambient-c: rgba(176, 140, 255, 0.06);
+  --nova-ambient-bg:
+    radial-gradient(
+      900px 640px at 15% -10%,
+      var(--nova-ambient-a) 0%,
+      transparent 58%
+    ),
+    radial-gradient(
+      1000px 680px at 90% -20%,
+      var(--nova-ambient-b) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      1100px 760px at 50% 118%,
+      var(--nova-ambient-c) 0%,
+      transparent 62%
+    ),
+    linear-gradient(
+      115deg,
+      rgba(79, 224, 196, 0.04) -20%,
+      transparent 40%,
+      rgba(176, 140, 255, 0.05) 60%,
+      transparent 90%
+    ),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.015) 0%, transparent 30%);
+}

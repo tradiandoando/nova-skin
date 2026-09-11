@@ -1,0 +1,80 @@
+/* =========================================================
+   NOVA SKIN · TEMA "SUNSET"
+   Ember dusk · amber / coral / ember rose
+   v0.5.0
+   =========================================================
+   Variante cálida del lenguaje visual NOVA: fondo amatista
+   oscuro, acentos coral/ámbar y bruma de atardecer.
+   Override de tokens semánticos sobre el core.
+
+   Activar: data-nova-theme="sunset" en <html>.
+   ========================================================= */
+
+html.nova-skin-active[data-nova-theme="sunset"] {
+  /* Fondo: crepúsculo profundo */
+  --nova-bg-0: #0d0707;
+  --nova-bg-1: #16100c;
+  --nova-bg-surface: rgba(25, 17, 12, 0.66);
+  --nova-bg-surface-solid: #1a130e;
+  --nova-bg-hover: rgba(255, 138, 92, 0.11);
+
+  /* Tinta: crema cálido */
+  --nova-ink-0: #fff1e7;
+  --nova-ink-1: #d8c4b2;
+  --nova-ink-2: #8a7666;
+  --nova-ink-3: rgba(255, 241, 231, 0.32);
+
+  /* Bordes: luz ámbar tenue */
+  --nova-line-0: rgba(255, 170, 118, 0.1);
+  --nova-line-1: rgba(255, 170, 118, 0.18);
+  --nova-line-2: rgba(255, 138, 92, 0.5);
+
+  /* Acentos: coral → ámbar → rosa ember */
+  --nova-accent-1: #ff8a5c;
+  --nova-accent-2: #ffb36b;
+  --nova-accent-3: #ff6f91;
+  --nova-accent-ink: #2a1105;
+  --nova-grad: linear-gradient(120deg, #ff8a5c 0%, #ffb36b 50%, #ff6f91 100%);
+  --nova-grad-ink: linear-gradient(110deg, #ffa37a 0%, #ffd19b 50%, #ff9cb3 100%);
+
+  /* Glow cálido */
+  --nova-glow-focus:
+    0 0 0 3px rgba(255, 138, 92, 0.16),
+    0 0 26px rgba(255, 138, 92, 0.13),
+    0 0 52px rgba(255, 111, 145, 0.05);
+  --nova-glow-hover:
+    0 0 0 1px rgba(255, 138, 92, 0.4),
+    0 4px 20px rgba(255, 138, 92, 0.14);
+  --nova-shadow-card:
+    0 1px 0 rgba(255, 255, 255, 0.03) inset,
+    0 12px 32px rgba(12, 4, 2, 0.55);
+
+  /* Selección / scrollbar / caret */
+  --nova-selection-bg: rgba(255, 138, 92, 0.35);
+  --nova-selection-ink: #ffffff;
+  --nova-scroll-thumb: rgba(255, 138, 92, 0.3);
+  --nova-scroll-thumb-hover: rgba(255, 179, 107, 0.44);
+  --nova-caret: #ffab7d;
+
+  /* Atmósfera: bruma de atardecer */
+  --nova-ambient-a: rgba(255, 138, 92, 0.1);
+  --nova-ambient-b: rgba(255, 111, 145, 0.07);
+  --nova-ambient-c: rgba(255, 179, 107, 0.07);
+  --nova-ambient-bg:
+    radial-gradient(
+      1000px 700px at 12% -15%,
+      var(--nova-ambient-a) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      860px 600px at 92% -10%,
+      var(--nova-ambient-b) 0%,
+      transparent 58%
+    ),
+    radial-gradient(
+      1200px 800px at 55% 120%,
+      var(--nova-ambient-c) 0%,
+      transparent 62%
+    ),
+    linear-gradient(180deg, rgba(255, 179, 107, 0.04) 0%, transparent 30%);
+}

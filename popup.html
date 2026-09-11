@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=320">
+<title>NOVA Skin</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 300px;
+    font-family: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+    background: #0c0e18;
+    color: #e8ecf7;
+    padding: 20px;
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  .logo {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #8b7cff 0%, #c58cff 50%, #5ee7ff 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 13px;
+    color: #101220;
+    flex-shrink: 0;
+  }
+
+  .title {
+    font-family: "Space Grotesk", "Inter", ui-sans-serif, system-ui, sans-serif;
+    font-size: 15px;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    background: linear-gradient(110deg, #a69bff 0%, #d5a3ff 45%, #86ecff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .subtitle {
+    font-size: 11px;
+    color: #6e7490;
+    margin-bottom: 16px;
+    letter-spacing: 0.02em;
+  }
+
+  .themes {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .preview {
+    position: relative;
+    display: flex;
+    height: 118px;
+    margin-bottom: 16px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(152,158,196,0.14);
+    background: var(--pv-bg);
+    transition: background 180ms cubic-bezier(0.22,0.61,0.36,1);
+  }
+
+  .preview::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: 0 0 34px color-mix(in srgb, var(--pv-accent) 14%, transparent) inset;
+    pointer-events: none;
+  }
+
+  .pv-side {
+    width: 68px;
+    flex-shrink: 0;
+    background: var(--pv-panel);
+    border-right: 1px solid color-mix(in srgb, var(--pv-accent) 18%, transparent);
+  }
+
+  .pv-main {
+    flex: 1;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .pv-line {
+    height: 7px;
+    border-radius: 4px;
+    background: var(--pv-ink0);
+    opacity: 0.85;
+    width: 78%;
+  }
+
+  .pv-title {
+    width: 52%;
+    height: 9px;
+    margin-bottom: 2px;
+    opacity: 1;
+  }
+
+  .pv-line-dim {
+    background: var(--pv-ink1);
+    opacity: 0.6;
+    width: 92%;
+  }
+
+  .pv-send {
+    align-self: flex-end;
+    margin-top: auto;
+    width: 36px;
+    height: 22px;
+    border-radius: 7px;
+    background: var(--pv-grad);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--pv-accent) 40%, transparent);
+  }
+
+  .group-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #6e7490;
+    margin: 4px 2px 0;
+  }
+
+  .group-label:first-child {
+    margin-top: 0;
+  }
+
+  .fx-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 14px;
+    padding: 10px 12px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(152,158,196,0.12);
+    border-radius: 10px;
+    transition: border-color 160ms ease;
+  }
+
+  .fx-row:hover {
+    border-color: rgba(152,158,196,0.2);
+  }
+
+  .fx-info {
+    min-width: 0;
+  }
+
+  .fx-name {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #e8ecf7;
+    margin-bottom: 1px;
+  }
+
+  .fx-desc {
+    font-size: 10.5px;
+    color: #6e7490;
+  }
+
+  .fx-toggle {
+    position: relative;
+    width: 38px;
+    height: 22px;
+    border-radius: 999px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(152,158,196,0.2);
+    cursor: pointer;
+    transition: background 220ms cubic-bezier(0.22,0.61,0.36,1),
+                border-color 220ms cubic-bezier(0.22,0.61,0.36,1);
+    padding: 0;
+    flex-shrink: 0;
+  }
+
+  .fx-toggle:focus-visible {
+    outline: 1px solid #8b7cff;
+    outline-offset: 1px;
+  }
+
+  .fx-knob {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 999px;
+    background: #6e7490;
+    transition: transform 220ms cubic-bezier(0.22,0.61,0.36,1),
+                background 220ms cubic-bezier(0.22,0.61,0.36,1);
+    pointer-events: none;
+  }
+
+  .fx-toggle[aria-checked="true"] {
+    background: rgba(139,124,255,0.09);
+    border-color: rgba(139,124,255,0.45);
+  }
+
+  .fx-toggle[aria-checked="true"] .fx-knob {
+    background: #8b7cff;
+    transform: translateX(16px);
+  }
+
+  .tools-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .tool-btn {
+    padding: 7px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #b9bcc9;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(152,158,196,0.12);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 160ms cubic-bezier(0.22,0.61,0.36,1);
+  }
+
+  .tool-btn:hover {
+    background: rgba(139,124,255,0.09);
+    border-color: rgba(152,158,196,0.2);
+    color: #e8ecf7;
+  }
+
+  .tool-note {
+    margin-top: 10px;
+    padding: 7px 10px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 500;
+    border: 1px solid rgba(152,158,196,0.12);
+    opacity: 0;
+    transform: translateY(-2px);
+    transition: opacity 180ms ease, transform 180ms ease;
+    background: rgba(255,255,255,0.02);
+    color: #e8ecf7;
+  }
+
+  .tool-note.show {
+    opacity: 1;
+    transform: none;
+  }
+
+  .tool-note.ok {
+    border-color: rgba(79,224,196,0.4);
+    color: #9ff0dd;
+  }
+
+  .tool-note.err {
+    border-color: rgba(255,111,97,0.4);
+    color: #ffb3a9;
+  }
+
+  .theme-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 10px 12px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(152,158,196,0.12);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 160ms cubic-bezier(0.22,0.61,0.36,1);
+    text-align: left;
+  }
+
+  .theme-btn:hover {
+    background: rgba(139,124,255,0.09);
+    border-color: rgba(152,158,196,0.2);
+  }
+
+  .theme-btn.active {
+    border-color: var(--swatch);
+    box-shadow:
+      0 0 0 1px var(--swatch) inset,
+      0 0 20px color-mix(in srgb, var(--swatch) 16%, transparent) inset;
+  }
+
+  .swatch {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .swatch::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .theme-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .theme-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #e8ecf7;
+    margin-bottom: 1px;
+  }
+
+  .theme-desc {
+    font-size: 10.5px;
+    color: #6e7490;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .check {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(152,158,196,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 160ms ease;
+  }
+
+  .active .check {
+    background: var(--swatch);
+    border-color: var(--swatch);
+  }
+
+  .check svg {
+    width: 10px;
+    height: 10px;
+    opacity: 0;
+    transition: opacity 120ms ease;
+  }
+
+  .active .check svg {
+    opacity: 1;
+  }
+
+  .footer {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(152,158,196,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .version {
+    font-size: 10px;
+    color: #6e7490;
+    letter-spacing: 0.03em;
+  }
+
+  .dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #4fe0c4;
+    opacity: 0.7;
+  }
+</style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="logo">N</div>
+    <div class="title">NOVA Skin</div>
+  </div>
+  <div class="subtitle">Select a theme for ChatGPT</div>
+
+  <div class="preview" id="preview">
+    <div class="pv-side"></div>
+    <div class="pv-main">
+      <div class="pv-line pv-title"></div>
+      <div class="pv-line"></div>
+      <div class="pv-line pv-line-dim"></div>
+      <div class="pv-send"></div>
+    </div>
+  </div>
+
+  <div class="themes" id="themes"></div>
+
+  <div class="fx-row">
+    <div class="fx-info">
+      <div class="fx-name">Atmosphere FX</div>
+      <div class="fx-desc">Nebulas + motion</div>
+    </div>
+    <button class="fx-toggle" id="fxToggle" role="switch" aria-checked="true" aria-label="Atmosphere FX">
+      <span class="fx-knob"></span>
+    </button>
+  </div>
+
+  <div class="tools-row">
+    <button class="tool-btn" id="exportTheme">Export · JSON</button>
+    <button class="tool-btn" id="importTheme">Import · JSON</button>
+    <input type="file" id="importInput" accept=".json,application/json" hidden>
+  </div>
+  <div class="tool-note" id="toolNote"></div>
+
+  <div class="footer">
+    <span class="version">v0.6.0</span>
+    <div class="dot"></div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,110 @@
+/* =========================================================
+   NOVA SKIN · TEMA "COSMIC"
+   Deep space · indigo / nebula / starlight
+   v0.2.0
+   =========================================================
+   Variante del lenguaje visual NOVA con atmósfera espacial:
+   fondo indigo casi negro, nebulosas suaves y estrellas
+   discretas. Override de tokens semánticos sobre el core.
+
+   Activar: data-nova-theme="cosmic" en <html>.
+   ========================================================= */
+
+html.nova-skin-active[data-nova-theme="cosmic"] {
+  /* Fondo: capas de profundidad */
+  --nova-bg-0: #04050d;
+  --nova-bg-1: #090b18;
+  --nova-bg-surface: rgba(11, 14, 26, 0.66);
+  --nova-bg-surface-solid: #0d101f;
+  --nova-bg-hover: rgba(109, 123, 255, 0.11);
+
+  /* Tinta: jerarquía */
+  --nova-ink-0: #eef1fd;
+  --nova-ink-1: #b4bad7;
+  --nova-ink-2: #7d86a9;
+  --nova-ink-3: rgba(238, 241, 253, 0.32);
+
+  /* Bordes suaves con iluminación tenue */
+  --nova-line-0: rgba(134, 146, 212, 0.12);
+  --nova-line-1: rgba(134, 146, 212, 0.2);
+  --nova-line-2: rgba(122, 135, 255, 0.5);
+
+  /* Acentos & gradientes */
+  --nova-accent-1: #6d7bff;
+  --nova-accent-2: #9b8bff;
+  --nova-accent-3: #9bb6ff;
+  --nova-accent-ink: #0b0e1c;
+  --nova-grad: linear-gradient(120deg, #6d7bff 0%, #9b8bff 55%, #9bb6ff 100%);
+  --nova-grad-ink: linear-gradient(110deg, #8491ff 0%, #b3a4ff 45%, #aec6ff 100%);
+
+  /* Glow controlado */
+  --nova-glow-focus:
+    0 0 0 3px rgba(109, 123, 255, 0.16),
+    0 0 26px rgba(109, 123, 255, 0.13),
+    0 0 52px rgba(155, 182, 255, 0.05);
+  --nova-glow-hover:
+    0 0 0 1px rgba(109, 123, 255, 0.4),
+    0 4px 20px rgba(109, 123, 255, 0.14);
+  --nova-shadow-card:
+    0 1px 0 rgba(255, 255, 255, 0.03) inset,
+    0 12px 32px rgba(2, 3, 10, 0.55);
+
+  /* Selección / scrollbar / caret */
+  --nova-selection-bg: rgba(109, 123, 255, 0.35);
+  --nova-selection-ink: #ffffff;
+  --nova-scroll-thumb: rgba(122, 135, 255, 0.32);
+  --nova-scroll-thumb-hover: rgba(155, 182, 255, 0.46);
+  --nova-caret: #8f9cff;
+
+  /* Atmósfera: nebulosas indigo + moteado estelar */
+  --nova-ambient-a: rgba(109, 123, 255, 0.11);
+  --nova-ambient-b: rgba(155, 182, 255, 0.07);
+  --nova-ambient-c: rgba(109, 123, 255, 0.06);
+  --nova-ambient-bg:
+    radial-gradient(
+      1000px 700px at 10% -15%,
+      var(--nova-ambient-a) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      860px 600px at 95% -10%,
+      var(--nova-ambient-b) 0%,
+      transparent 58%
+    ),
+    radial-gradient(
+      1200px 800px at 55% 120%,
+      var(--nova-ambient-c) 0%,
+      transparent 62%
+    ),
+    radial-gradient(
+      1px 1px at 12% 22%,
+      rgba(255, 255, 255, 0.26) 50%,
+      transparent 51%
+    ),
+    radial-gradient(
+      1px 1px at 26% 9%,
+      rgba(255, 255, 255, 0.18) 50%,
+      transparent 51%
+    ),
+    radial-gradient(
+      1px 1px at 38% 31%,
+      rgba(155, 182, 255, 0.28) 50%,
+      transparent 51%
+    ),
+    radial-gradient(
+      1px 1px at 58% 6%,
+      rgba(255, 255, 255, 0.14) 50%,
+      transparent 51%
+    ),
+    radial-gradient(
+      1px 1px at 73% 27%,
+      rgba(155, 182, 255, 0.22) 50%,
+      transparent 51%
+    ),
+    radial-gradient(
+      1px 1px at 90% 12%,
+      rgba(255, 255, 255, 0.16) 50%,
+      transparent 51%
+    ),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, transparent 30%);
+}
