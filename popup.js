@@ -307,11 +307,11 @@
     if (g && g.diff !== null && g.banner) {
       const lado = g.diff > 4 ? "la DERECHA" : g.diff < -4 ? "la IZQUIERDA" : "el CENTRO";
       const local = " (banner c:" + g.bannerCx + " · input c:" + g.inputCx + ")";
+      const convTxt = g.conv ? "conversación SÍ (" + g.convSignal + ")" : "conversación NO";
       wmStatus.textContent =
         "OK · marca " +
         (Math.abs(g.diff) <= 4 ? "en el centro del input" : "desviada " + Math.abs(g.diff) + "px hacia " + lado + " del input") +
-        " · ventana " + g.viewport[0] + "×" + g.viewport[1] + " · input " + (g.banner[2]) + "px" +
-        (g.main ? " · main " + g.main[2] + "px" : "") + local;
+        " · ventana " + g.viewport[0] + "×" + g.viewport[1] + " · " + convTxt + " · input " + g.banner[2] + "px" + local;
     } else {
       wmStatus.textContent = "OK — capa creada (" + (d.size ? d.size[0] + "×" + d.size[1] : "?") + "), texto en el fondo correcto.";
     }

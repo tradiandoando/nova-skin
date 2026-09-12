@@ -329,12 +329,39 @@
      - oculta: al enviarse el 1er mensaje / existir conversación →
        desaparece con fade. content.js alterna .nova-watermark-hidden
        y posiciona top/left/transform. */
+  function conversationSignal() {
+    const strong = [
+      '[data-message-author-role="user"]',
+      '[data-message-author-role="assistant"]',
+      "[data-testid='conversation-turn']",
+      "[data-testid='chat-message']",
+    ];
+    for (const s of strong) {
+      if (document.querySelector(s)) {
+        weakConvSeen = null;
+        return s;
+      }
+    }
+    if (/\/c\//.test(location.pathname)) {
+      weakConvSeen = null;
+      return "url:/c/";
+    }
+    /* Señales débiles (podrían aparecer en la UI vacía): solo se aceptan
+       si persisten en 2 chequeos seguidos (evita ocultar de más). */
+    const weak = ['article', '[data-testid*="message"]', '[data-testid*="turn"]'];
+    for (const s of weak) {
+      if (document.querySelector(s)) {
+        if (weakConvSeen === s) return s;
+        weakConvSeen = s;
+        return null;
+      }
+    }
+    weakConvSeen = null;
+    return null;
+  }
+
   function hasConversation() {
-    return (
-      document.querySelector(
-        '[data-message-author-role="user"], [data-message-author-role="assistant"], [data-testid="conversation-turn"]'
-      ) !== null
-    );
+    return conversationSignal() !== null;
   }
 
 /* El banner se posiciona cubriendo la caja del área principal del chat
@@ -347,6 +374,7 @@
      const WM_TOP_BIAS = 40;
 
   let wmTop = null;
+  let weakConvSeen = null;
 
   /* Rect de ancla: la caja del área principal del chat. */
   function anchorRect() {
@@ -441,6 +469,8 @@
       bannerCx: Math.round(cx),
       inputCx: inputCx !== null ? Math.round(inputCx) : null,
       diff: inputCx !== null ? Math.round(cx - inputCx) : null,
+      conv: hasConversation(),
+      convSignal: conversationSignal(),
       main: mainEl ? rectOf(mainEl) : null,
       thread: threadEl ? rectOf(threadEl) : null,
       viewport: [window.innerWidth, window.innerHeight],
