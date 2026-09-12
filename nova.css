@@ -223,8 +223,12 @@ html.nova-skin-active {
   --border-white: var(--nova-line-0);
 
   /* Puente de tokens modernos ChatGPT (React 19 / Tailwind v4) */
-  --canvas-background: var(--nova-bg-0);
-  --main-surface-background: var(--nova-bg-0);
+  /* El lienzo de la app es un contenedor OPACO encima de las capas
+     negativas (nebulosa ::before/::after + marca de agua). Si aquí va
+     un color sólido, tapa la atmósfera. El <body> ya aporta el fondo
+     base (--nova-bg-0 + ambient), así que el lienzo debe ser transparente. */
+  --canvas-background: transparent;
+  --main-surface-background: transparent;
   --sidebar-background: var(--nova-bg-1);
   --composer-background-color: transparent;
   --bg-token-main-surface-primary: var(--nova-bg-0);

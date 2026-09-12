@@ -82,7 +82,7 @@
     if (!text) return null;
     const opacity = Number.isFinite(Number(w.opacity))
       ? Math.max(5, Math.min(95, Number(w.opacity)))
-      : 45;
+      : 55;
     return { text, opacity };
   }
 
