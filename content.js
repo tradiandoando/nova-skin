@@ -366,26 +366,39 @@
   }
 
   /* Detección del envío REAL del primer mensaje, independiente del DOM
-     que use ChatGPT: 1) Enter con texto → si el textarea se vacía a los
-     400ms, se envió; 2) evento submit del form del composer; 3) clic en el
-     botón enviar. Se toleran ids genéricos del composer. Nada se bloquea
-     ni se previene (passive / capture): el chat nunca se toca. */
+     que use ChatGPT: 1) Enter con texto → si la caja del composer se vacía
+     a los 400ms, se envió; 2) submit del form; 3) clic en enviar.
+     Soporta tanto <textarea> como <div contenteditable> (el composer
+     actual de ChatGPT). Nada se bloquea ni se previene (passive/capture):
+     el chat nunca se toca. */
+  const armNet = () => {
+    armed = true;
+  };
+  document.addEventListener("keydown", armNet, { passive: true, once: true });
+  document.addEventListener("pointerdown", armNet, {
+    passive: true,
+    once: true,
+  });
+
   function trackSend() {
     if (sendHooked) return;
-    const t = document.querySelector("#prompt-textarea, main textarea");
+    const t = document.querySelector(
+      '#prompt-textarea, main textarea, main div[contenteditable="true"]'
+    );
     if (!t) return;
     sendHooked = true;
+    const composerText = () =>
+      (t.value !== undefined ? t.value : t.innerText || "") || "";
     t.addEventListener(
       "keydown",
       (e) => {
         if (
-          e.key === "Enter" &&
+          (e.key === "Enter" || e.key === "NumpadEnter") &&
           !e.shiftKey &&
-          t.value &&
-          t.value.trim().length > 0
+          composerText().trim().length > 0
         ) {
           setTimeout(() => {
-            if (!t.value || t.value.trim() === "") {
+            if (composerText().trim() === "") {
               submitted = true;
               scheduleAlign();
             }
@@ -411,7 +424,7 @@
         const b =
           e.target && e.target.closest
             ? e.target.closest(
-                '[data-testid="send-button"], [data-testid*="send-button"], [aria-label*="send" i], button[type="submit"]'
+                '[data-testid*="send"], [aria-label*="send" i], button[type="submit"]'
               )
             : null;
         if (b) {
@@ -438,6 +451,8 @@
   let emptyPolls = 0;
   let sendHooked = false;
   let tLenPrev = 0;
+  let armed = false;
+  let pollPeak = -1;
 
   /* Rect de ancla: la caja del área principal del chat. */
   function anchorRect() {
@@ -453,6 +468,24 @@
   function alignWatermark() {
     const el = document.getElementById(WATERMARK_ID);
     if (!el) return;
+    /* Red final: aunque el composer cambie de DOM para siempre, si el
+       thread empieza a crecer de texto es porque hay una conversación
+       en curso → oculta. Se arma con el primer uso del teclado/clic para
+       no confundir el contenido estático de carga con una respuesta. */
+    if (armed && !submitted) {
+      const tN =
+        document.querySelector(
+          '[data-testid="thread-container"], [data-testid*="thread"]'
+        ) || document.querySelector("main");
+      const len = tN ? (tN.textContent || "").length : 0;
+      if (pollPeak < 0) pollPeak = len;
+      else {
+        if (len - pollPeak > 250) {
+          submitted = true;
+        }
+        if (len > pollPeak) pollPeak = len;
+      }
+    }
     let show = !hasConversation();
     if (!show) {
       /* Oculto. El banner SOLO reaparece cuando la conversación se limpió
@@ -474,6 +507,7 @@
       if (emptyPolls >= 3) {
         emptyPolls = 0;
         submitted = false;
+        pollPeak = -1;
         show = true;
       }
     } else {
