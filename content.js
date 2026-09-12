@@ -330,7 +330,11 @@
        desaparece con fade. content.js alterna .nova-watermark-hidden
        y posiciona top/left/transform. */
   function hasConversation() {
-    return document.querySelector('[data-message-author-role="user"]') !== null;
+    return (
+      document.querySelector(
+        '[data-message-author-role="user"], [data-message-author-role="assistant"], [data-testid="conversation-turn"]'
+      ) !== null
+    );
   }
 
 /* El banner se posiciona cubriendo la caja del área principal del chat
@@ -627,6 +631,10 @@
       }
     }
     watchReplies();
+    /* Red de seguridad: aunque el observer se pierda mutaciones, cada
+       700ms se re-chequea el estado (visible en chat vacío / oculto con
+       fade al iniciarse la conversación). Coste despreciable. */
+    setInterval(() => scheduleAlign(), 700);
   }
 
   chrome.runtime.onMessage.addListener((msg) => {
