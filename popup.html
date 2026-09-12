@@ -262,6 +262,21 @@
     min-width: 0;
   }
 
+  .wm-img-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .wm-preview {
+    width: 34px;
+    height: 34px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid rgba(152,158,196,0.25);
+    background: #0c0e18;
+  }
+
   .wm-status {
     font-size: 10.5px;
     line-height: 1.4;
@@ -455,6 +470,33 @@
     background: #4fe0c4;
     opacity: 0.7;
   }
+
+  .model-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 100%;
+    font-size: 10.5px;
+    letter-spacing: 0.04em;
+    color: #9ff0dd;
+    background: rgba(79,224,196,0.08);
+    border: 1px solid rgba(79,224,196,0.22);
+    border-radius: 999px;
+    padding: 3px 10px;
+    margin: 0 0 10px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .model-chip::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #4fe0c4;
+    flex-shrink: 0;
+  }
 </style>
 </head>
 <body>
@@ -464,6 +506,8 @@
     <div class="title">NOVA Skin</div>
   </div>
   <div class="subtitle">Select a theme for ChatGPT</div>
+
+  <div class="model-chip" id="modelChip" hidden></div>
 
   <div class="preview" id="preview">
     <div class="pv-side"></div>
@@ -500,8 +544,14 @@
     <input class="wm-input" id="wmText" type="text" maxlength="24" placeholder="TU MARCA · ej. RODRIGO" autocomplete="off">
     <div class="wm-scale">
       <span>0%</span>
-      <input type="range" id="wmOpacity" min="10" max="80" value="55" aria-label="Watermark opacity">
+      <input type="range" id="wmOpacity" min="10" max="100" value="75" aria-label="Watermark opacity">
       <span>80%</span>
+    </div>
+    <div class="wm-img-row">
+      <label class="tool-btn" for="wmImg">Imagen PNG</label>
+      <input type="file" id="wmImg" accept="image/png" hidden>
+      <button class="tool-btn" id="wmImgText" hidden>Usar texto</button>
+      <img id="wmImgPreview" class="wm-preview" alt="" hidden>
     </div>
     <div class="wm-status" id="wmStatus"></div>
   </div>
@@ -514,7 +564,7 @@
   <div class="tool-note" id="toolNote"></div>
 
   <div class="footer">
-    <span class="version">v0.7.4</span>
+    <span class="version">v0.7.14</span>
     <div class="dot"></div>
   </div>
 

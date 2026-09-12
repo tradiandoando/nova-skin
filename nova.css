@@ -1079,27 +1079,127 @@ html.nova-skin-active[data-nova-fx="off"] {
 }
 
 /* --- MARCA DE AGUA PERSONAL ---
-   Capa de fondo estática, por encima de las nebulosas (::before, z -2)
-   y bajo la bruma (::after, z -1), por lo que el texto queda diáfano.
-   Sin movimiento propio: no depende de FX ni de reduced-motion.
-   Texto y opacidad configurados desde el popup (nova.watermark). */
+   Banner de arranque estilo terminal (vibra opencode): letras pesadas
+   blocky dentro de un recuadro con borde y caracteres de caja, barra
+   de cabecera y pie. Vive POR ENCIMA del contenido (z alto,
+   pointer-events none): nadie la tapa y no bloquea la interacción.
+   Puede ser texto o una imagen PNG propia (nova.watermark). Sin uso
+   de FX ni de reduced-motion. */
 html.nova-skin-active .nova-watermark {
   position: fixed;
   inset: 0;
-  z-index: -1;
-  display: grid;
-  place-items: center;
+  z-index: 999;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: clamp(2.6rem, 11vh, 6.5rem);
   overflow: hidden;
   pointer-events: none;
   user-select: none;
   white-space: nowrap;
-  font-family: var(--nova-font-display);
-  font-size: clamp(4rem, 10vw, 9rem);
-  font-weight: 600;
-  letter-spacing: 0.3em;
+  font-family: ui-monospace, "Ubuntu Mono", "DejaVu Sans Mono", Menlo, Consolas, monospace;
+  font-size: clamp(2.6rem, 7vw, 5.5rem);
+  font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   line-height: 1;
-  color: var(--nova-ink-0);
+}
+
+/* Variante "en el hilo": el banner es el PRIMER elemento del hilo y
+   hace scroll junto con los mensajes. Al bajar a leer, queda arriba
+   y no se superpone con el texto. La pone content.js cuando detecta
+   thread-container. */
+html.nova-skin-active .nova-watermark-inline {
+  position: static;
+  inset: auto;
+  z-index: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: clamp(0.6rem, 1.5vh, 1.2rem) 0 clamp(1.2rem, 3vh, 2.2rem);
+}
+
+html.nova-skin-active .nova-watermark-inline .nova-watermark-word {
+  max-width: 92vw;
+}
+
+html.nova-skin-active .nova-watermark-word {
+  position: relative;
+  display: inline-block;
+  padding: clamp(1.3rem, 3.6vh, 2.8rem) clamp(2.4rem, 6.5vw, 5rem);
+  border: 2px solid color-mix(in srgb, var(--nova-accent-2) 68%, transparent);
+  border-radius: 14px;
+  background-color: color-mix(in srgb, var(--nova-bg-0) 38%, transparent);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--nova-accent-2) 16%, transparent),
+    0 0 46px color-mix(in srgb, var(--nova-accent-2) 10%, transparent);
+}
+
+html.nova-skin-active .nova-watermark-word::before {
+  content: "╭─ NOVA · SKIN ─╮";
+  display: block;
+  text-align: center;
+  font-size: clamp(0.68rem, 1.4vh, 0.95rem);
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  color: var(--nova-accent-2);
+  margin-bottom: 0.95em;
+  opacity: 0.92;
+}
+
+html.nova-skin-active .nova-watermark-word::after {
+  content: "╰─ ready ─╯";
+  display: block;
+  text-align: center;
+  font-size: clamp(0.62rem, 1.3vh, 0.9rem);
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  color: color-mix(in srgb, var(--nova-accent-2) 80%, var(--nova-ink-muted));
+  margin-top: 0.95em;
+  opacity: 0.75;
+}
+
+html.nova-skin-active .nova-watermark-text {
+  -webkit-text-fill-color: transparent;
+  background-image: linear-gradient(
+    110deg,
+    color-mix(in srgb, var(--nova-ink-0) 88%, transparent) 0%,
+    color-mix(in srgb, #41f0ff 22%, transparent) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  filter: drop-shadow(0 2px 10px color-mix(in srgb, var(--nova-bg-0) 72%, transparent))
+    drop-shadow(0 0 16px color-mix(in srgb, #3ee8ff 30%, transparent));
+}
+
+html.nova-skin-active .nova-watermark-img {
+  max-width: min(74vw, 820px);
+  max-height: 72vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 10px;
+  filter: drop-shadow(0 2px 16px color-mix(in srgb, var(--nova-bg-0) 72%, transparent));
+}
+
+/* --- PULSO DE RESPUESTA NUEVA ---
+   Al llegar un mensaje nuevo del asistente, un pulso de luz del
+   acento rodea el composer (#prompt-textarea). La clase `nova-pulse`
+   la pone/quita content.js (watchReplies). */
+@keyframes nova-response-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--nova-accent-2) 50%, transparent);
+  }
+
+  100% {
+    box-shadow: 0 0 0 30px transparent;
+  }
+}
+
+html.nova-skin-active.nova-pulse #prompt-textarea,
+html.nova-skin-active.nova-pulse [data-testid="composer"] {
+  animation: nova-response-pulse 0.9s ease-out;
 }
 
 /* =========================================================

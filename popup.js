@@ -267,6 +267,16 @@
   const wmText = document.getElementById("wmText");
   const wmOpacity = document.getElementById("wmOpacity");
   const wmStatus = document.getElementById("wmStatus");
+  const wmImg = document.getElementById("wmImg");
+  const wmImgPreview = document.getElementById("wmImgPreview");
+  const wmImgText = document.getElementById("wmImgText");
+  const modelChip = document.getElementById("modelChip");
+  let wmImage = null;
+
+  const setModel = (name) => {
+    modelChip.hidden = !name;
+    if (name) modelChip.textContent = name;
+  };
 
   const setWmStatus = (d) => {
     if (!d) {
@@ -297,22 +307,67 @@
   };
 
   const setWmUI = (wm) => {
-    const has = Boolean(wm && wm.text);
+    const has = Boolean(wm && (wm.text || wm.image));
     wmToggle.setAttribute("aria-checked", has ? "true" : "false");
     wmFields.hidden = !has;
+    wmImage = wm && wm.image ? wm.image : null;
+    if (wmImage) {
+      wmImgText.hidden = false;
+      wmImgPreview.hidden = false;
+      wmImgPreview.src = wmImage;
+    } else {
+      wmImgText.hidden = true;
+      wmImgPreview.hidden = true;
+      wmImgPreview.removeAttribute("src");
+    }
     if (has) {
-      wmText.value = wm.text;
-      wmOpacity.value = String(wm.opacity);
+      wmText.value = wm.text || "";
+      wmOpacity.value = String(wm.opacity || 75);
     }
   };
 
   const pushWatermark = () => {
-    const wm = { text: wmText.value.trim(), opacity: Number(wmOpacity.value) };
-    state.watermark = wm.text ? wm : null;
+    const text = wmText.value.trim();
+    const opacity = Number(wmOpacity.value);
+    state.watermark = wmImage
+      ? { image: wmImage, opacity }
+      : text
+        ? { text, opacity }
+        : null;
     saveLocal(WATERMARK_KEY, state.watermark);
     setWmUI(state.watermark);
     sendMessage({ type: "nova:setWatermark", watermark: state.watermark });
   };
+
+  wmImg.addEventListener("change", () => {
+    const f = wmImg.files && wmImg.files[0];
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, 640 / Math.max(img.width, img.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(img.width * scale));
+        canvas.height = Math.max(1, Math.round(img.height * scale));
+        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+        wmImage = canvas.toDataURL("image/png");
+        wmImg.value = "";
+        pushWatermark();
+      };
+      img.src = String(reader.result);
+    };
+    reader.readAsDataURL(f);
+  });
+
+  wmImgText.addEventListener("click", () => {
+    wmImage = null;
+    wmImgPreview.hidden = true;
+    wmImgText.hidden = true;
+    wmImgPreview.removeAttribute("src");
+    wmText.focus();
+    pushWatermark();
+  });
 
   wmToggle.addEventListener("click", () => {
     const next = wmToggle.getAttribute("aria-checked") !== "true";
@@ -424,6 +479,7 @@
   setFxUI(state.fx);
   setWmUI(state.watermark);
   setWmStatus(null);
+  setModel("");
 
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const tab = tabs && tabs[0];
@@ -433,7 +489,7 @@
         state.theme = res.theme;
         state.fx = res.fx === "off" ? "off" : "on";
         state.customThemes = (res.customThemes || []).filter(validCustom);
-        if (res.watermark && res.watermark.text) state.watermark = res.watermark;
+        if (res.watermark && (res.watermark.text || res.watermark.image)) state.watermark = res.watermark;
         saveLocal(WATERMARK_KEY, state.watermark);
         saveLocal(CUSTOM_KEY, state.customThemes);
         render();
@@ -441,6 +497,7 @@
         setFxUI(state.fx);
         setWmUI(state.watermark);
         setWmStatus(res.wmDebug);
+        setModel(res.model);
       }
     });
   });

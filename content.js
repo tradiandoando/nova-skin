@@ -7,6 +7,8 @@
   const CUSTOM_KEY = "nova.customThemes";
   const WATERMARK_KEY = "nova.watermark";
   const WATERMARK_ID = "nova-watermark";
+  const DEFAULT_WATERMARK = { text: "NOVA", opacity: 75 };
+  const WATERMARK_OFF = { off: true };
   const CUSTOM_STYLE_ID = "nova-custom-styles";
 
   const DEFAULT_THEME = "nova";
@@ -75,19 +77,40 @@
     }
   }
 
+  /* ---------- modelo activo detectado en la UI ---------- */
+  function readModel() {
+    try {
+      const sel = document.querySelector(
+        '[data-testid="composer-model-selector"], [data-element-id="model-selector"], [data-testid*="model-selector"]'
+      );
+      const t = sel ? String(sel.textContent || "").replace(/\s+/g, " ").trim() : "";
+      return t && t.length <= 40 ? t : "";
+    } catch (_) {
+      return "";
+    }
+  }
+
   /* ---------- watermark (marca de agua personal) ---------- */
   function sanitizeWatermark(w) {
     if (!w || typeof w !== "object") return null;
+    const image =
+      typeof w.image === "string" && /^data:image\/(png|webp|jpeg);base64,/.test(w.image) && w.image.length < 1600000
+        ? w.image
+        : null;
     const text = String(w.text || "").trim().slice(0, 24);
-    if (!text) return null;
     const opacity = Number.isFinite(Number(w.opacity))
       ? Math.max(5, Math.min(95, Number(w.opacity)))
-      : 55;
+      : 75;
+    if (image) return { image, opacity };
+    if (!text) return null;
     return { text, opacity };
   }
 
   function readWatermark() {
-    return sanitizeWatermark(readJson(WATERMARK_KEY, null));
+    const stored = readJson(WATERMARK_KEY, undefined);
+    if (stored === undefined || stored === null) return Object.assign({}, DEFAULT_WATERMARK);
+    if (stored.off === true) return null;
+    return sanitizeWatermark(stored);
   }
 
   function ensureWatermark() {
@@ -101,10 +124,112 @@
       el = document.createElement("div");
       el.id = WATERMARK_ID;
       el.className = "nova-watermark";
+      const word = document.createElement("span");
+      word.className = "nova-watermark-word";
+      word.appendChild(document.createElement("span")).className = "nova-watermark-text";
+      el.appendChild(word);
       document.body.appendChild(el);
     }
-    el.textContent = wm.text;
+    const textEl = el.querySelector(".nova-watermark-text");
+    const imgEl = el.querySelector(".nova-watermark-img");
+    if (wm.image) {
+      if (!imgEl) {
+        const img = document.createElement("img");
+        img.className = "nova-watermark-img";
+        img.alt = "watermark";
+        img.decoding = "async";
+        el.querySelector(".nova-watermark-word").appendChild(img);
+      }
+      el.querySelector(".nova-watermark-img").src = wm.image;
+      if (textEl) textEl.textContent = "";
+    } else {
+      if (imgEl) imgEl.remove();
+      if (textEl) textEl.textContent = wm.text;
+    }
     el.style.opacity = wm.opacity / 100;
+    placeWatermark(el);
+    scheduleAlign();
+  }
+
+  /* Ancla el banner como PRIMER hijo del hilo (scroll natural junto a
+     los mensajes: no tapa el texto al leer). Fallback: fixed en body. */
+  let threadEl = null;
+  function findThread() {
+    if (threadEl && threadEl.isConnected) return threadEl;
+    threadEl = document.querySelector(
+      '[data-testid="thread-container"], [data-testid*="thread"], [class*="thread"]'
+    );
+    return threadEl;
+  }
+
+  function placeWatermark(el) {
+    const thread = findThread();
+    if (thread && el.parentElement !== thread) {
+      el.classList.add("nova-watermark-inline");
+      el.style.transform = "";
+      thread.insertBefore(el, thread.firstChild);
+    } else if (!thread && el.parentElement !== document.body) {
+      el.classList.remove("nova-watermark-inline");
+      document.body.appendChild(el);
+    }
+  }
+
+  /* Alinea el banner con la columna del input/composer (no con el
+     centro del viewport, que queda corrido cuando el sidebar está
+     abierto). Ancla a thread-container / #prompt-textarea. */
+  function alignWatermark() {
+    const el = document.getElementById(WATERMARK_ID);
+    if (!el) return;
+    if (el.classList.contains("nova-watermark-inline")) {
+      placeWatermark(el);
+      return;
+    }
+    let cx = window.innerWidth / 2;
+    let anchor = document.querySelector(
+      '[data-testid="thread-container"], .nova-anchor-thread, #prompt-textarea'
+    );
+    if (!anchor || !anchor.getBoundingClientRect) anchor = null;
+    if (anchor) {
+      const r = anchor.getBoundingClientRect();
+      if (r && r.width > 0) cx = r.left + r.width / 2;
+    }
+    el.style.transform = "translateX(" + Math.round(cx - window.innerWidth / 2) + "px)";
+  }
+
+  let alignRaf = 0;
+  function scheduleAlign() {
+    if (alignRaf) return;
+    alignRaf = requestAnimationFrame(() => {
+      alignRaf = 0;
+      alignWatermark();
+    });
+  }
+
+  /* ---------- pulso de respuesta nueva ---------- */
+  let assistantCount = -1;
+  let pulseT = 0;
+  function pulseResponse() {
+    const root = document.documentElement;
+    root.classList.add("nova-pulse");
+    clearTimeout(pulseT);
+    pulseT = setTimeout(() => root.classList.remove("nova-pulse"), 1000);
+  }
+
+  function watchReplies() {
+    if (typeof MutationObserver !== "function") return;
+    assistantCount = document.querySelectorAll('[data-message-author-role="assistant"]').length;
+    let raf = 0;
+    const check = () => {
+      raf = 0;
+      const n = document.querySelectorAll('[data-message-author-role="assistant"]').length;
+      if (n > assistantCount) pulseResponse();
+      assistantCount = n;
+    };
+    const mo = new MutationObserver(() => {
+      if (raf) return;
+      raf = requestAnimationFrame(check);
+    });
+    mo.observe(document.body, { childList: true, subtree: true });
   }
 
   function watermarkDebug() {
@@ -279,6 +404,9 @@
     applyTheme(readTheme());
     applyFx(readFx());
     ensureWatermark();
+    window.addEventListener("resize", scheduleAlign);
+    window.addEventListener("scroll", scheduleAlign, true);
+    watchReplies();
   }
 
   chrome.runtime.onMessage.addListener((msg) => {
@@ -291,6 +419,7 @@
         customThemes: customThemes,
         watermark: readWatermark(),
         wmDebug: watermarkDebug(),
+        model: readModel(),
       };
     }
 
@@ -303,7 +432,7 @@
       applyFx(fx);
     } else if (msg.type === "nova:setWatermark") {
       const wm = sanitizeWatermark(msg.watermark);
-      localStorage.setItem(WATERMARK_KEY, wm ? JSON.stringify(wm) : "null");
+      localStorage.setItem(WATERMARK_KEY, wm ? JSON.stringify(wm) : JSON.stringify(WATERMARK_OFF));
       ensureWatermark();
     } else if (msg.type === "nova:setCustomThemes" && Array.isArray(msg.themes)) {
       customThemes = msg.themes.filter(validCustom);
