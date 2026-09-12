@@ -367,13 +367,13 @@
     const artW =
       Math.max(220, asciiFitPx(wmText) * 0.62 * asciiCols(wmText)) +
       (el.querySelector(".nova-watermark-word") ? 56 : 0);
-    const cx = r ? r.left + r.width / 2 : window.innerWidth / 2;
+    const cx = r ? r.left + r.width / 2 - 24 : window.innerWidth / 2 - 24;
     const clamp = Math.min(
       Math.max(artW / 2 + 16, cx),
       Math.max(artW / 2 + 16, window.innerWidth - artW / 2 - 16)
     );
     if (wmTop === null && r) {
-      wmTop = Math.max(20, Math.round(r.top) + 26);
+      wmTop = Math.max(24, Math.round(r.top) + 42);
     }
     if (wmTop !== null) {
       el.style.top = wmTop + "px";
