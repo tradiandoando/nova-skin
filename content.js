@@ -188,8 +188,8 @@
       top = Math.max(8, Math.round(r.top) + 16);
     }
     el.style.top = top + "px";
-    el.style.left = "50%";
-    el.style.transform = "translateX(" + Math.round(cx - window.innerWidth / 2) + "px)";
+    el.style.left = Math.round(cx) + "px";
+    el.style.transform = "translateX(-50%)";
   }
 
   /* Auto-ocultado: la marca se esconde con fade al interactuar o
