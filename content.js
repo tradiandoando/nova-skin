@@ -161,25 +161,20 @@
   }
 
   /* Estados de la marca (automáticos):
-     - boot: sin conversación y sin foco en el composer → se muestra
-       ARRIBA del chat, centrada horizontal (como opencode).
-     - oculta: en cuanto hay 1+ mensaje, se scrollea o se enfoca/pisa el
-       composer → desaparece con fade. content.js alterna
-       .nova-watermark-hidden y posiciona top/left/transform. */
+     - boot: sin conversación → se muestra ARRIBA del chat, centrada
+       horizontal (como opencode). No desaparece al hacer clic o al
+       escribir en el composer.
+     - oculta: al enviarse el 1er mensaje / existir conversación →
+       desaparece con fade. content.js alterna .nova-watermark-hidden
+       y posiciona top/left/transform. */
   function hasConversation() {
     return document.querySelector('[data-message-author-role="user"]') !== null;
-  }
-
-  function composerFocused() {
-    const ae = document.activeElement;
-    if (!ae || !ae.closest) return false;
-    return !!ae.closest('[data-testid="composer"], #prompt-textarea');
   }
 
   function alignWatermark() {
     const el = document.getElementById(WATERMARK_ID);
     if (!el) return;
-    const show = !hasConversation() && !composerFocused();
+    const show = !hasConversation();
     el.classList.toggle("nova-watermark-hidden", !show);
     if (!show) return;
     let anchor = document.querySelector(
@@ -411,7 +406,6 @@ let alignRaf = 0;
     ensureWatermark();
     window.addEventListener("resize", scheduleAlign);
     window.addEventListener("scroll", scheduleAlign, true);
-    document.addEventListener("focusin", scheduleAlign, true);
     watchReplies();
   }
 
