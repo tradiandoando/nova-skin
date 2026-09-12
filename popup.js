@@ -266,6 +266,35 @@
   const wmFields = document.getElementById("wmFields");
   const wmText = document.getElementById("wmText");
   const wmOpacity = document.getElementById("wmOpacity");
+  const wmStatus = document.getElementById("wmStatus");
+
+  const setWmStatus = (d) => {
+    if (!d) {
+      wmStatus.className = "wm-status";
+      wmStatus.textContent = "Abrí ChatGPT y tocá \"NOVA Skin\" para verificar.";
+      return;
+    }
+    if (!d.exists) {
+      wmStatus.className = "wm-status warn";
+      wmStatus.textContent =
+        "La marca no se creó en la página (content.js viejo o página no recargada). Recargá la extensión y luego Ctrl+R en ChatGPT.";
+      return;
+    }
+    const bad = d.style && !d.style.includes("block");
+    const tapado = d.onTop && d.onTop !== "BODY" && d.onTop.startsWith("DIV");
+    if (bad) {
+      wmStatus.className = "wm-status err";
+      wmStatus.textContent = "Creada pero invisible en CSS: " + d.style;
+      return;
+    }
+    if (tapado) {
+      wmStatus.className = "wm-status warn";
+      wmStatus.textContent = "La tapa un contenedor: " + d.onTop + ". Es el dato que necesita el fix.";
+      return;
+    }
+    wmStatus.className = "wm-status ok";
+    wmStatus.textContent = "OK — capa creada (" + (d.size ? d.size[0] + "×" + d.size[1] : "?") + "), texto en el fondo correcto.";
+  };
 
   const setWmUI = (wm) => {
     const has = Boolean(wm && wm.text);
@@ -394,6 +423,7 @@
   applyPreview(state.theme);
   setFxUI(state.fx);
   setWmUI(state.watermark);
+  setWmStatus(null);
 
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const tab = tabs && tabs[0];
@@ -410,6 +440,7 @@
         applyPreview(state.theme);
         setFxUI(state.fx);
         setWmUI(state.watermark);
+        setWmStatus(res.wmDebug);
       }
     });
   });

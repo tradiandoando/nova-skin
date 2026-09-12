@@ -107,6 +107,24 @@
     el.style.opacity = wm.opacity / 100;
   }
 
+  function watermarkDebug() {
+    const el = document.getElementById(WATERMARK_ID);
+    if (!el) {
+      return { exists: false, stored: String(readJson(WATERMARK_KEY, null) || "") };
+    }
+    const s = getComputedStyle(el);
+    const r = el.getBoundingClientRect();
+    const cx = r.left + r.width / 2;
+    const cy = r.top + r.height / 2;
+    const top = document.elementFromPoint(cx, cy);
+    return {
+      exists: true,
+      style: [s.display, s.zIndex, s.fontSize, s.opacity, s.visibility].join(","),
+      size: [Math.round(r.width), Math.round(r.height)],
+      onTop: top ? top.tagName + "." + String(top.className || "").slice(0, 60) : null,
+    };
+  }
+
   /* ---------- color helpers (custom-theme derivation) ---------- */
   function hexRgb(hex) {
     let h = String(hex || "").replace("#", "").trim();
@@ -267,7 +285,13 @@
     if (!msg || typeof msg !== "object") return;
 
     if (msg.type === "nova:getState") {
-      return { theme: readTheme(), fx: readFx(), customThemes: customThemes, watermark: readWatermark() };
+      return {
+        theme: readTheme(),
+        fx: readFx(),
+        customThemes: customThemes,
+        watermark: readWatermark(),
+        wmDebug: watermarkDebug(),
+      };
     }
 
     if (msg.type === "nova:setTheme" && isValidThemeId(msg.theme)) {

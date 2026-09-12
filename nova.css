@@ -245,6 +245,9 @@ html.nova-skin-active [data-message-author-role] {
 }
 
 /* Superficies token-mejoras de ChatGPT (bg-token-*, surface) transparentes */
+html.nova-skin-active #__next,
+html.nova-skin-active body > #__next > div,
+html.nova-skin-active [data-testid="chatgpt-root"],
 html.nova-skin-active [class*="bg-token"],
 html.nova-skin-active main [class*="surface-primary"],
 html.nova-skin-active main [class*="surface-secondary"] {
