@@ -9,6 +9,7 @@
   const WATERMARK_ID = "nova-watermark";
   const DEFAULT_WATERMARK = { text: "NOVA", opacity: 75 };
   const WATERMARK_OFF = { off: true };
+  const WMPOS_KEY = "nova.wmPos";
   const CUSTOM_STYLE_ID = "nova-custom-styles";
 
   const DEFAULT_THEME = "nova";
@@ -113,6 +114,14 @@
     return sanitizeWatermark(stored);
   }
 
+  function readWmPos() {
+    try {
+      return localStorage.getItem(WMPOS_KEY) === "lateral" ? "lateral" : "top";
+    } catch (_) {
+      return "top";
+    }
+  }
+
   function ensureWatermark() {
     const wm = readWatermark();
     let el = document.getElementById(WATERMARK_ID);
@@ -147,6 +156,7 @@
       if (textEl) textEl.textContent = wm.text;
     }
     el.style.setProperty("--wm-active", wm.opacity / 100);
+    el.classList.toggle("nova-watermark-lateral", readWmPos() === "lateral");
     updateDim(el, true);
     scheduleAlign();
   }
@@ -167,6 +177,11 @@
   function alignWatermark() {
     const el = document.getElementById(WATERMARK_ID);
     if (!el) return;
+    if (el.classList.contains("nova-watermark-lateral")) {
+      el.style.top = "";
+      el.style.transform = "";
+      return;
+    }
     let cx = window.innerWidth / 2;
     let anchor = document.querySelector(
       '[data-testid="thread-container"], .nova-anchor-thread, #prompt-textarea'
@@ -423,6 +438,7 @@
         customThemes: customThemes,
         watermark: readWatermark(),
         wmDebug: watermarkDebug(),
+        wmPos: readWmPos(),
         model: readModel(),
       };
     }
@@ -438,6 +454,10 @@
       const wm = sanitizeWatermark(msg.watermark);
       localStorage.setItem(WATERMARK_KEY, wm ? JSON.stringify(wm) : JSON.stringify(WATERMARK_OFF));
       ensureWatermark();
+    } else if (msg.type === "nova:setWmPos") {
+      localStorage.setItem(WMPOS_KEY, msg.pos === "lateral" ? "lateral" : "top");
+      ensureWatermark();
+      scheduleAlign();
     } else if (msg.type === "nova:setCustomThemes" && Array.isArray(msg.themes)) {
       customThemes = msg.themes.filter(validCustom);
       writeJson(CUSTOM_KEY, customThemes);

@@ -1114,6 +1114,38 @@ html.nova-skin-active .nova-watermark-dim {
   opacity: calc(var(--wm-active, 0.75) * 0.15);
 }
 
+/* Variante LATERAL: píldora vertical pegada al borde izquierdo (sobre
+   el rail del sidebar), nunca encima del texto del chat. La activa el
+   popup (nova.wmPos = "lateral"). */
+html.nova-skin-active .nova-watermark-lateral {
+  inset: auto;
+  top: 50%;
+  left: 16px;
+  padding: 0;
+  display: block;
+  font-size: clamp(1.3rem, 3vw, 2.1rem);
+  letter-spacing: 0.16em;
+}
+
+html.nova-skin-active .nova-watermark-lateral .nova-watermark-word {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  padding: 0.9em 0.5em;
+  max-height: 88vh;
+  border-radius: 999px;
+}
+
+html.nova-skin-active .nova-watermark-lateral .nova-watermark-word::before,
+html.nova-skin-active .nova-watermark-lateral .nova-watermark-word::after {
+  display: none;
+}
+
+html.nova-skin-active .nova-watermark-lateral .nova-watermark-img {
+  max-width: 22vh;
+  max-height: 58vh;
+  object-fit: contain;
+}
+
 html.nova-skin-active .nova-watermark-word {
   position: relative;
   display: inline-block;
