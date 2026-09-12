@@ -1166,10 +1166,11 @@ html.nova-skin-active .nova-watermark-text {
     drop-shadow(0 0 16px color-mix(in srgb, #3ee8ff 30%, transparent));
 }
 
-/* Modo graffiti ASCII (fuente "ANSI Shadow"): bloques de terminal del
-   texto, bicolor estilo opencode (cian arriba → violeta abajo),
-   ocupando el ancho del chat. El font-size lo calcula content.js
-   (asciiFitPx) según la longitud del texto. */
+/* Modo graffiti ASCII (fuente "ANSI Shadow"): bloques de terminal
+   bicolor POR PALABRA — "open" en cian, "nova" en violeta (estilo boot
+   de opencode). Cada palabra va en un .nova-word con su propio
+   background-clip; el contenedor solo alinea y da el tamaño (font-size
+   lo calcula content.js con asciiFitPx). */
 html.nova-skin-active .nova-watermark-ascii {
   display: block;
   width: 100%;
@@ -1181,13 +1182,32 @@ html.nova-skin-active .nova-watermark-ascii {
   font-weight: 700;
   font-size: clamp(20px, 4vw, 44px);
   text-transform: none;
-  background-image: linear-gradient(180deg, #41f0ff 0%, #41f0ff 46%, #7a6cff 54%, #8b7cff 100%);
-  filter: drop-shadow(0 3px 12px color-mix(in srgb, #41f0ff 28%, transparent))
-    drop-shadow(0 0 26px color-mix(in srgb, #8b7cff 26%, transparent));
+}
+
+html.nova-skin-active .nova-watermark-ascii .nova-word {
+  display: inline-block;
+  white-space: pre;
+  vertical-align: top;
+  -webkit-text-fill-color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  line-height: 1.04;
+}
+
+html.nova-skin-active .nova-watermark-ascii .nova-cyan {
+  background-image: linear-gradient(180deg, #d7feff 0%, #14e2ff 100%);
+  filter: drop-shadow(0 2px 6px color-mix(in srgb, #14e2ff 30%, transparent))
+    drop-shadow(0 0 18px color-mix(in srgb, #14e2ff 22%, transparent));
+}
+
+html.nova-skin-active .nova-watermark-ascii .nova-violet {
+  background-image: linear-gradient(180deg, #c0a2ff 0%, #6a53ff 100%);
+  filter: drop-shadow(0 2px 6px color-mix(in srgb, #6a53ff 34%, transparent))
+    drop-shadow(0 0 18px color-mix(in srgb, #6a53ff 24%, transparent));
 }
 
 html.nova-skin-active .nova-watermark-word.nova-ascii {
-  padding: clamp(1rem, 2.4vh, 1.9rem) clamp(1.4rem, 3.4vw, 2.8rem);
+  padding: clamp(0.8rem, 1.8vh, 1.35rem) clamp(1rem, 2.4vw, 1.9rem);
   border-radius: 14px;
   box-shadow: none;
 }

@@ -7,7 +7,7 @@
   const CUSTOM_KEY = "nova.customThemes";
   const WATERMARK_KEY = "nova.watermark";
   const WATERMARK_ID = "nova-watermark";
-  const DEFAULT_WATERMARK = { text: "OPENNOVA", opacity: 75 };
+  const DEFAULT_WATERMARK = { text: "OPEN NOVA", opacity: 75 };
   const WATERMARK_OFF = { off: true };
 
   /* fuente ASCII "ANSI Shadow" (figlet, public domain) */
@@ -110,20 +110,6 @@
   };
   const NOVA_ASCII_H = 6;
 
-
-  function asciiRows(text) {
-    const t = String(text).toUpperCase().slice(0, 24);
-    const rows = [];
-    for (let r = 0; r < NOVA_ASCII_H; r++) {
-      rows.push(
-        t.split("")
-          .map((ch) => (NOVA_ASCII_FONT[ch] || NOVA_ASCII_FONT["?"])[r] || "")
-          .join(" ")
-      );
-    }
-    return rows.join("\n");
-  }
-
   function asciiCols(text) {
     const t = String(text).toUpperCase().slice(0, 24);
     let w = 0;
@@ -134,6 +120,33 @@
     return w + Math.max(0, t.length - 1);
   }
 
+  /* Arma el arte por palabra: cada palabra en un span con clip propio
+     (bicolor "open" cian / "nova" violeta). Los spans inline-block se
+     pegan con un espacio real para conservar una columna de separación. */
+  function asciiBuild(el, text) {
+    el.textContent = "";
+    const t = String(text).toUpperCase().slice(0, 24);
+    const parts = t.split(/\s+/).filter(Boolean);
+    if (!parts.length) return;
+    const H = NOVA_ASCII_H;
+    parts.forEach((seg, i) => {
+      const rows = [];
+      for (let r = 0; r < H; r++) {
+        rows.push(
+          seg
+            .split("")
+            .map((ch) => (NOVA_ASCII_FONT[ch] || NOVA_ASCII_FONT["?"])[r] || "")
+            .join(" ")
+        );
+      }
+      const s = document.createElement("span");
+      s.className = "nova-word " + (i % 2 ? "nova-violet" : "nova-cyan");
+      s.textContent = rows.join("\n");
+      el.appendChild(s);
+      if (i < parts.length - 1) el.appendChild(document.createTextNode(" "));
+    });
+  }
+
   function asciiFitPx(text) {
     const cols = asciiCols(text);
     let w = window.innerWidth;
@@ -142,7 +155,7 @@
       const r = anchor.getBoundingClientRect();
       if (r && r.width > 0) w = r.width;
     }
-    const fit = Math.min(Math.max(320, w * 0.94), 920);
+    const fit = Math.min(Math.max(280, w * 0.86), 860);
     return Math.max(12, Math.min(64, fit / (cols * 0.62)));
   }
   const CUSTOM_STYLE_ID = "nova-custom-styles";
@@ -287,7 +300,8 @@
     } else {
       if (imgEl) imgEl.remove();
       if (textEl) {
-        textEl.textContent = asciiRows(wm.text);
+        textEl.textContent = "";
+        asciiBuild(textEl, wm.text);
         textEl.classList.add("nova-watermark-ascii");
         textEl.style.fontSize = asciiFitPx(wm.text) + "px";
         textEl.style.lineHeight = "1.04";
@@ -339,12 +353,21 @@
         '[data-testid="thread-container"], .nova-anchor-thread, #prompt-textarea'
       );
       const r = anchor && anchor.getBoundingClientRect ? anchor.getBoundingClientRect() : null;
-      if (r && r.width > 0 && r.height > 0) {
-        wmPin = {
-          left: Math.round(r.left + r.width / 2),
-          top: Math.max(8, Math.round(r.top) + 16),
-        };
-      }
+      let cx = window.innerWidth / 2;
+      if (r && r.width > 0 && r.height > 0) cx = r.left + r.width / 2;
+      const wmState = readWatermark();
+      const wmText = wmState.image ? "OPEN NOVA" : String(wmState.text || "OPEN NOVA");
+      const artW =
+        Math.max(220, asciiFitPx(wmText) * 0.62 * asciiCols(wmText)) +
+        (el.querySelector(".nova-watermark-word") ? 56 : 0);
+      const clamp = Math.min(
+        Math.max(artW / 2 + 16, cx),
+        Math.max(artW / 2 + 16, window.innerWidth - artW / 2 - 16)
+      );
+      wmPin = {
+        left: Math.round(clamp),
+        top: Math.max(8, r && r.top ? Math.round(r.top) + 14 : 16),
+      };
     }
     if (wmPin) {
       el.style.top = wmPin.top + "px";
