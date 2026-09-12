@@ -146,13 +146,12 @@
       if (imgEl) imgEl.remove();
       if (textEl) textEl.textContent = wm.text;
     }
-    el.style.opacity = wm.opacity / 100;
-    placeWatermark(el);
+    el.style.setProperty("--wm-active", wm.opacity / 100);
+    updateDim(el, true);
     scheduleAlign();
   }
 
-  /* Ancla el banner como PRIMER hijo del hilo (scroll natural junto a
-     los mensajes: no tapa el texto al leer). Fallback: fixed en body. */
+  /* Ancla del banner: la columna de mensajes (thread-container). */
   let threadEl = null;
   function findThread() {
     if (threadEl && threadEl.isConnected) return threadEl;
@@ -162,28 +161,12 @@
     return threadEl;
   }
 
-  function placeWatermark(el) {
-    const thread = findThread();
-    if (thread && el.parentElement !== thread) {
-      el.classList.add("nova-watermark-inline");
-      el.style.transform = "";
-      thread.insertBefore(el, thread.firstChild);
-    } else if (!thread && el.parentElement !== document.body) {
-      el.classList.remove("nova-watermark-inline");
-      document.body.appendChild(el);
-    }
-  }
-
   /* Alinea el banner con la columna del input/composer (no con el
      centro del viewport, que queda corrido cuando el sidebar está
      abierto). Ancla a thread-container / #prompt-textarea. */
   function alignWatermark() {
     const el = document.getElementById(WATERMARK_ID);
     if (!el) return;
-    if (el.classList.contains("nova-watermark-inline")) {
-      placeWatermark(el);
-      return;
-    }
     let cx = window.innerWidth / 2;
     let anchor = document.querySelector(
       '[data-testid="thread-container"], .nova-anchor-thread, #prompt-textarea'
@@ -191,9 +174,29 @@
     if (!anchor || !anchor.getBoundingClientRect) anchor = null;
     if (anchor) {
       const r = anchor.getBoundingClientRect();
-      if (r && r.width > 0) cx = r.left + r.width / 2;
+      if (r && r.width > 0) {
+        cx = r.left + r.width / 2;
+        el.style.top = Math.max(40, Math.round(r.top) + 8) + "px";
+      } else {
+        el.style.top = "";
+      }
+    } else {
+      el.style.top = "";
     }
     el.style.transform = "translateX(" + Math.round(cx - window.innerWidth / 2) + "px)";
+  }
+
+  /* Auto-atenuación: a plena opacidad en el tope del chat; al
+     scrollear para leer se apaga (no se interpone con el texto). */
+  function updateDim(el, manual) {
+    const e = el || document.getElementById(WATERMARK_ID);
+    if (!e) return;
+    const thread = findThread && findThread();
+    const scrolled = thread && thread.isConnected
+      ? thread.scrollTop > 120
+      : window.scrollY > 120;
+    e.classList.toggle("nova-watermark-dim", scrolled);
+    if (manual) e.classList.remove("nova-watermark-dim");
   }
 
   let alignRaf = 0;
@@ -202,6 +205,7 @@
     alignRaf = requestAnimationFrame(() => {
       alignRaf = 0;
       alignWatermark();
+      updateDim();
     });
   }
 

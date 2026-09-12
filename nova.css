@@ -1103,25 +1103,15 @@ html.nova-skin-active .nova-watermark {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   line-height: 1;
+  opacity: var(--wm-active, 0.75);
+  transition: opacity 0.3s ease;
 }
 
-/* Variante "en el hilo": el banner es el PRIMER elemento del hilo y
-   hace scroll junto con los mensajes. Al bajar a leer, queda arriba
-   y no se superpone con el texto. La pone content.js cuando detecta
-   thread-container. */
-html.nova-skin-active .nova-watermark-inline {
-  position: static;
-  inset: auto;
-  z-index: auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  padding: clamp(0.6rem, 1.5vh, 1.2rem) 0 clamp(1.2rem, 3vh, 2.2rem);
-}
-
-html.nova-skin-active .nova-watermark-inline .nova-watermark-word {
-  max-width: 92vw;
+/* Auto-atenuación: el banner queda fijo arriba del chat pero se apaga
+   al scrollear para leer, sin interponerse con el texto. Pone/quita
+   la clase content.js (updateDim). */
+html.nova-skin-active .nova-watermark-dim {
+  opacity: calc(var(--wm-active, 0.75) * 0.15);
 }
 
 html.nova-skin-active .nova-watermark-word {
