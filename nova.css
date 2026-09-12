@@ -1106,15 +1106,24 @@ html.nova-skin-active .nova-watermark {
   line-height: 1;
   opacity: var(--wm-active, 0.75);
   transition: top 0.55s cubic-bezier(0.4, 0, 0.2, 1),
-    left 0.55s cubic-bezier(0.4, 0, 0.2, 1),
-    transform 0.55s cubic-bezier(0.4, 0, 0.2, 1),
-    opacity 0.3s ease;
+    left 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.45s ease,
+    visibility 0s;
 }
 
-/* Oculta la marca con fade cuando hay conversación o se interactúa
-   con el composer (la pone content.js). */
+/* Ocultación: solapado suave (opacity + visibility). Solo se oculta al
+   enviarse el primer mensaje (lo decide content.js: existe un nodo de
+   usuario, no el foco/typing). Al ocultarse hace fade y después deja de
+   pintar; al mostrarse vuelve al instante y hace fade-in. */
 html.nova-skin-active .nova-watermark-hidden {
   opacity: 0;
+  visibility: hidden;
+  transition: top 0.55s cubic-bezier(0.4, 0, 0.2, 1),
+    left 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.45s ease,
+    visibility 0s linear 0.45s;
 }
 
 html.nova-skin-active .nova-watermark-word {

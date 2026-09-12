@@ -333,15 +333,15 @@
     return document.querySelector('[data-message-author-role="user"]') !== null;
   }
 
-  /* Posición fijada una sola vez (pin). ChatGPT re-centra su "estado
-     vacío" al hacer clic en el composer; si seguimos el rect del ancla,
-     la marca se viajaba al centro. La mantenemos en el mismo lugar
-     hasta que haya resize, se oculte (conversación) o cambie de chat. */
-  let wmPin = null;
+  /* Top fijado una sola vez: el área inicial del chat no se mueve cuando
+     ChatGPT re-centra su estado vacío, y el banner no debe viajar ni
+     seguir el scroll. La horizontal SIEMPRE se recalcula sobre la columna
+     real (main/thread), así el banner sigue al sidebar y al tamaño de
+     ventana en todo momento. */
+  let wmTop = null;
 
-  /* Rect de ancla: la columna de mensajes. Priorizamos el thread; si aún
-     no existe (DOM no terminó de armar el estado vacío) usamos <main>,
-     que es estable. NUNCA el composer para fijar el top. */
+  /* Rect de ancla: la columna de mensajes (área principal del chat).
+     NUNCA el composer (el top del composer no es el top del chat). */
   function anchorRect() {
     const el = document.querySelector(
       '[data-testid="thread-container"], [data-testid*="thread"], main, .nova-anchor-thread'
@@ -358,37 +358,26 @@
     const show = !hasConversation();
     el.classList.toggle("nova-watermark-hidden", !show);
     if (!show) {
-      wmPin = null;
+      wmTop = null;
       return;
     }
     const r = anchorRect();
-    if (r) {
-      const wmState = readWatermark();
-      const wmText = wmState.image ? "OPEN NOVA" : String(wmState.text || "OPEN NOVA");
-      const artW =
-        Math.max(220, asciiFitPx(wmText) * 0.62 * asciiCols(wmText)) +
-        (el.querySelector(".nova-watermark-word") ? 56 : 0);
-      const cx = Math.min(
-        Math.max(artW / 2 + 16, r.left + r.width / 2),
-        Math.max(artW / 2 + 16, window.innerWidth - artW / 2 - 16)
-      );
-      if (!wmPin) {
-        wmPin = {
-          left: Math.round(cx),
-          top: Math.max(8, Math.round(r.top) + 14),
-        };
-      }
-    } else if (!wmPin) {
-      /* AÚN sin layout: posición provisional centrada en la ventana,
-         SIN fijar el pin. Al aparecer un ancla real se re-calcula. */
-      el.style.top = "16px";
-      el.style.left = "50%";
-      el.style.transform = "translateX(-50%)";
-      return;
+    const wmState = readWatermark();
+    const wmText = wmState.image ? "OPEN NOVA" : String(wmState.text || "OPEN NOVA");
+    const artW =
+      Math.max(220, asciiFitPx(wmText) * 0.62 * asciiCols(wmText)) +
+      (el.querySelector(".nova-watermark-word") ? 56 : 0);
+    const cx = r ? r.left + r.width / 2 : window.innerWidth / 2;
+    const clamp = Math.min(
+      Math.max(artW / 2 + 16, cx),
+      Math.max(artW / 2 + 16, window.innerWidth - artW / 2 - 16)
+    );
+    if (wmTop === null && r) {
+      wmTop = Math.max(20, Math.round(r.top) + 26);
     }
-    if (wmPin) {
-      el.style.top = wmPin.top + "px";
-      el.style.left = wmPin.left + "px";
+    if (wmTop !== null) {
+      el.style.top = wmTop + "px";
+      el.style.left = Math.round(clamp) + "px";
       el.style.transform = "translateX(-50%)";
     }
   }
@@ -603,11 +592,27 @@
     applyTheme(readTheme());
     applyFx(readFx());
     ensureWatermark();
-    window.addEventListener("resize", () => {
-      wmPin = null;
-      scheduleAlign();
-    });
+    window.addEventListener("resize", scheduleAlign);
     window.addEventListener("scroll", scheduleAlign, true);
+    if (typeof ResizeObserver === "function") {
+      const ro = new ResizeObserver(scheduleAlign);
+      const probe = () => {
+        const a = document.querySelector(
+          'main, [data-testid="thread-container"], [data-testid*="thread"], .nova-anchor-thread'
+        );
+        if (a) {
+          ro.observe(a);
+          return true;
+        }
+        return false;
+      };
+      if (!probe()) {
+        const t = setInterval(() => {
+          if (probe()) clearInterval(t);
+        }, 800);
+        setTimeout(() => clearInterval(t), 20000);
+      }
+    }
     watchReplies();
   }
 
