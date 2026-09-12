@@ -160,60 +160,51 @@
     return threadEl;
   }
 
-  /* Alinea el banner con la columna del input/composer (no con el
-     centro del viewport, que queda corrido cuando el sidebar está
-     abierto). Ancla a thread-container / #prompt-textarea. */
-  /* Estados de posición (automáticos):
-     - "center": sin conversación, la marca aparece grande centrada.
-     - "side": al haber 1+ mensaje del usuario, se desliza sola al
-       lateral izquierdo superior, compacta y horizontal. */
+  /* Estados de la marca (automáticos):
+     - boot: sin conversación y sin foco en el composer → se muestra
+       ARRIBA del chat, centrada horizontal (como opencode).
+     - oculta: en cuanto hay 1+ mensaje, se scrollea o se enfoca/pisa el
+       composer → desaparece con fade. content.js alterna
+       .nova-watermark-hidden y posiciona top/left/transform. */
   function hasConversation() {
     return document.querySelector('[data-message-author-role="user"]') !== null;
+  }
+
+  function composerFocused() {
+    const ae = document.activeElement;
+    if (!ae || !ae.closest) return false;
+    return !!ae.closest('[data-testid="composer"], #prompt-textarea');
   }
 
   function alignWatermark() {
     const el = document.getElementById(WATERMARK_ID);
     if (!el) return;
-    const side = hasConversation();
-    el.classList.toggle("nova-watermark-side", side);
-    if (side) {
-      let anchor = document.querySelector(
-        '[data-testid="thread-container"], .nova-anchor-thread, #prompt-textarea'
-      );
-      const r = anchor && anchor.getBoundingClientRect
-        ? anchor.getBoundingClientRect()
-        : null;
-      const left = r && r.width > 0 ? r.left : 12;
-      const top = r && r.height > 0 ? r.top : 0;
-      el.style.top = Math.max(8, Math.round(top) + 12) + "px";
-      el.style.left = Math.max(8, Math.round(left) + 16) + "px";
-      el.style.transform = "none";
-    } else {
-      el.style.top = "50%";
-      el.style.left = "50%";
-      el.style.transform = "translate(-50%, -50%)";
+    const show = !hasConversation() && !composerFocused();
+    el.classList.toggle("nova-watermark-hidden", !show);
+    if (!show) return;
+    let anchor = document.querySelector(
+      '[data-testid="thread-container"], .nova-anchor-thread, #prompt-textarea'
+    );
+    const r = anchor && anchor.getBoundingClientRect ? anchor.getBoundingClientRect() : null;
+    let cx = window.innerWidth / 2;
+    let top = 16;
+    if (r && r.width > 0) {
+      cx = r.left + r.width / 2;
+      top = Math.max(8, Math.round(r.top) + 16);
     }
+    el.style.top = top + "px";
+    el.style.left = "50%";
+    el.style.transform = "translateX(" + Math.round(cx - window.innerWidth / 2) + "px)";
   }
 
-  /* Auto-atenuación: a plena opacidad en el tope del chat; al
-     scrollear para leer se apaga (no se interpone con el texto). */
-  function updateDim(el) {
-    const e = el || document.getElementById(WATERMARK_ID);
-    if (!e) return;
-    const thread = findThread && findThread();
-    const scrolled = thread && thread.isConnected
-      ? thread.scrollTop > 120
-      : window.scrollY > 120;
-    e.classList.toggle("nova-watermark-dim", scrolled);
-  }
-
-  let alignRaf = 0;
+  /* Auto-ocultado: la marca se esconde con fade al interactuar o
+   scrollear. La clase la pone content.js (alignWatermark). */
+let alignRaf = 0;
   function scheduleAlign() {
     if (alignRaf) return;
     alignRaf = requestAnimationFrame(() => {
       alignRaf = 0;
       alignWatermark();
-      updateDim();
     });
   }
 
@@ -420,6 +411,7 @@
     ensureWatermark();
     window.addEventListener("resize", scheduleAlign);
     window.addEventListener("scroll", scheduleAlign, true);
+    document.addEventListener("focusin", scheduleAlign, true);
     watchReplies();
   }
 
