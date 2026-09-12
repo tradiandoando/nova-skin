@@ -368,46 +368,53 @@
   /* Detección del envío REAL del primer mensaje, independiente del DOM
      que use ChatGPT: 1) Enter con texto → si el textarea se vacía a los
      400ms, se envió; 2) evento submit del form del composer; 3) clic en el
-     botón enviar. Nada se bloquea ni se previene (passive / capture), con
-     lo que el funcionamiento del chat queda intacto. */
+     botón enviar. Se toleran ids genéricos del composer. Nada se bloquea
+     ni se previene (passive / capture): el chat nunca se toca. */
   function trackSend() {
     if (sendHooked) return;
-    const t = document.querySelector("#prompt-textarea");
+    const t = document.querySelector("#prompt-textarea, main textarea");
     if (!t) return;
     sendHooked = true;
     t.addEventListener(
-        "keydown",
-        (e) => {
-          if (e.key === "Enter" && !e.shiftKey && t.value.trim().length > 0) {
-            setTimeout(() => {
-              if (t.value.trim() === "") {
-                submitted = true;
-                scheduleAlign();
-              }
-            }, 400);
-          }
+      "keydown",
+      (e) => {
+        if (
+          e.key === "Enter" &&
+          !e.shiftKey &&
+          t.value &&
+          t.value.trim().length > 0
+        ) {
+          setTimeout(() => {
+            if (!t.value || t.value.trim() === "") {
+              submitted = true;
+              scheduleAlign();
+            }
+          }, 400);
+        }
+      },
+      { passive: true }
+    );
+    const form = t.closest("form");
+    if (form) {
+      form.addEventListener(
+        "submit",
+        () => {
+          submitted = true;
+          scheduleAlign();
         },
-        { passive: true }
+        true
       );
-      const form = t.closest("form");
-      if (form) {
-        form.addEventListener(
-          "submit",
-          () => {
-            submitted = true;
-            scheduleAlign();
-          },
-          true
-        );
-      }
+    }
     document.addEventListener(
       "click",
       (e) => {
-        if (
-          e.target &&
-          e.target.closest &&
-          e.target.closest('[data-testid="send-button"], [aria-label*="Send"], [aria-label*="submit"]')
-        ) {
+        const b =
+          e.target && e.target.closest
+            ? e.target.closest(
+                '[data-testid="send-button"], [data-testid*="send-button"], [aria-label*="send" i], button[type="submit"]'
+              )
+            : null;
+        if (b) {
           submitted = true;
           scheduleAlign();
         }
@@ -430,6 +437,7 @@
   let submitted = false;
   let emptyPolls = 0;
   let sendHooked = false;
+  let tLenPrev = 0;
 
   /* Rect de ancla: la caja del área principal del chat. */
   function anchorRect() {
@@ -447,16 +455,22 @@
     if (!el) return;
     let show = !hasConversation();
     if (!show) {
-      /* Oculto. Pero si la UI ya volvió a un chat nuevo/vacío (sin
-         mensajes ni /c/ en la URL, composer sin texto), reactivamos el
-         banner después de 3 chequeos seguidos (~2s). */
-      const signal = conversationSignal();
-      const t = document.querySelector("#prompt-textarea");
-      const fresh =
-        signal === null &&
-        !/\/c\//.test(location.pathname) &&
-        (!t || t.value.trim() === "");
-      emptyPolls = fresh ? emptyPolls + 1 : 0;
+      /* Oculto. El banner SOLO reaparece cuando la conversación se limpió
+         de verdad (chat nuevo): el texto del thread caía de muchos a casi
+         ninguno. Previamente usábamos "composer vacío + sin señal" y eso
+         resucitaba el banner EN MEDIO de una respuesta viva (el bug que
+         tapaba la respuesta). Aquí, con contenido largo presente, jamás
+         resetea. */
+      const thread =
+        document.querySelector(
+          '[data-testid="thread-container"], [data-testid*="thread"]'
+        ) || document.querySelector("main");
+      const tLen = thread ? (thread.textContent || "").length : 0;
+      const dropped =
+        tLenPrev >= 200 && tLen < 120 && !/\/c\//.test(location.pathname);
+      if (dropped) emptyPolls += 1;
+      else if (tLen >= 120) emptyPolls = 0;
+      tLenPrev = tLen;
       if (emptyPolls >= 3) {
         emptyPolls = 0;
         submitted = false;
@@ -464,6 +478,7 @@
       }
     } else {
       emptyPolls = 0;
+      tLenPrev = 0;
     }
     el.classList.toggle("nova-watermark-hidden", !show);
     if (!show) {
