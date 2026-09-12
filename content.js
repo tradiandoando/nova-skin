@@ -171,25 +171,38 @@
     return document.querySelector('[data-message-author-role="user"]') !== null;
   }
 
+  /* Posición fijada una sola vez (pin). ChatGPT re-centra su "estado
+     vacío" al hacer clic en el composer; si seguimos el rect del ancla,
+     la marca se viajaba al centro. La mantenemos en el mismo lugar
+     hasta que haya resize, se oculte (conversación) o cambie de chat. */
+  let wmPin = null;
+
   function alignWatermark() {
     const el = document.getElementById(WATERMARK_ID);
     if (!el) return;
     const show = !hasConversation();
     el.classList.toggle("nova-watermark-hidden", !show);
-    if (!show) return;
-    let anchor = document.querySelector(
-      '[data-testid="thread-container"], .nova-anchor-thread, #prompt-textarea'
-    );
-    const r = anchor && anchor.getBoundingClientRect ? anchor.getBoundingClientRect() : null;
-    let cx = window.innerWidth / 2;
-    let top = 16;
-    if (r && r.width > 0) {
-      cx = r.left + r.width / 2;
-      top = Math.max(8, Math.round(r.top) + 16);
+    if (!show) {
+      wmPin = null;
+      return;
     }
-    el.style.top = top + "px";
-    el.style.left = Math.round(cx) + "px";
-    el.style.transform = "translateX(-50%)";
+    if (!wmPin) {
+      const anchor = document.querySelector(
+        '[data-testid="thread-container"], .nova-anchor-thread, #prompt-textarea'
+      );
+      const r = anchor && anchor.getBoundingClientRect ? anchor.getBoundingClientRect() : null;
+      if (r && r.width > 0 && r.height > 0) {
+        wmPin = {
+          left: Math.round(r.left + r.width / 2),
+          top: Math.max(8, Math.round(r.top) + 16),
+        };
+      }
+    }
+    if (wmPin) {
+      el.style.top = wmPin.top + "px";
+      el.style.left = wmPin.left + "px";
+      el.style.transform = "translateX(-50%)";
+    }
   }
 
   /* Auto-ocultado: la marca se esconde con fade al interactuar o
@@ -404,7 +417,10 @@ let alignRaf = 0;
     applyTheme(readTheme());
     applyFx(readFx());
     ensureWatermark();
-    window.addEventListener("resize", scheduleAlign);
+    window.addEventListener("resize", () => {
+      wmPin = null;
+      scheduleAlign();
+    });
     window.addEventListener("scroll", scheduleAlign, true);
     watchReplies();
   }
