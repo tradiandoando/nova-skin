@@ -7,7 +7,7 @@
   const CUSTOM_KEY = "nova.customThemes";
   const WATERMARK_KEY = "nova.watermark";
   const WATERMARK_ID = "nova-watermark";
-  const DEFAULT_WATERMARK = { text: "NOVA", opacity: 75 };
+  const DEFAULT_WATERMARK = { text: "OPENNOVA", opacity: 75 };
   const WATERMARK_OFF = { off: true };
 
   /* fuente ASCII "ANSI Shadow" (figlet, public domain) */

@@ -1167,8 +1167,9 @@ html.nova-skin-active .nova-watermark-text {
 }
 
 /* Modo graffiti ASCII (fuente "ANSI Shadow"): bloques de terminal del
-   texto NOVA, en degradado, ocupando el ancho del chat. El font-size
-   lo calcula content.js (asciiFitPx) según la longitud del texto. */
+   texto, bicolor estilo opencode (cian arriba → violeta abajo),
+   ocupando el ancho del chat. El font-size lo calcula content.js
+   (asciiFitPx) según la longitud del texto. */
 html.nova-skin-active .nova-watermark-ascii {
   display: block;
   width: 100%;
@@ -1180,6 +1181,9 @@ html.nova-skin-active .nova-watermark-ascii {
   font-weight: 700;
   font-size: clamp(20px, 4vw, 44px);
   text-transform: none;
+  background-image: linear-gradient(180deg, #41f0ff 0%, #41f0ff 46%, #7a6cff 54%, #8b7cff 100%);
+  filter: drop-shadow(0 3px 12px color-mix(in srgb, #41f0ff 28%, transparent))
+    drop-shadow(0 0 26px color-mix(in srgb, #8b7cff 26%, transparent));
 }
 
 html.nova-skin-active .nova-watermark-word.nova-ascii {

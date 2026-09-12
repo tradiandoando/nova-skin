@@ -63,7 +63,7 @@ NOVA Skin currently runs as an unpacked Chrome / Edge extension.
 
 Clone the repository or download the release ZIP:
 
-`nova-skin-v0.7.22.zip`
+`nova-skin-v0.7.23.zip`
 
 ### 2. Open the extensions page
 
@@ -368,7 +368,7 @@ NOVA Skin is an independent project and is **not affiliated with, endorsed by, o
 
 ## Status
 
-**Version:** `0.7.22`
+**Version:** `0.7.23`
 
 **Status:** Public Community Preview
 
