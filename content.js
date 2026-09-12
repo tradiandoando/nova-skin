@@ -333,32 +333,18 @@
     return document.querySelector('[data-message-author-role="user"]') !== null;
   }
 
-/* Top fijado una sola vez: el área inicial del chat no se mueve cuando
-     ChatGPT re-centra su estado vacío, y el banner no debe viajar ni
-     seguir el scroll. La horizontal SIEMPRE se recalcula, anclada al
-     centro del composer (#prompt-textarea), que es la referencia exacta
-     "centrado sobre el input". Si el composer aún no existe, cae en la
-     columna principal (thread/main). */
+/* El banner se posiciona cubriendo la caja del área principal del chat
+     (main/thread) con --wm-left/--wm-width; el centrado horizontal lo hace
+     flex (justify-content:center), así queda perfecto respecto del chat y
+     no de la ventana, y sigue al sidebar y al tamaño de ventana. --wm-top
+     es la única posición vertical (la fija una vez arriba del contenido). */
 
-     /* Ajuste fino (px): cuánto baja del borde superior del chat y el
-        sesgo horizontal. Se afina acá. */
-     const WM_TOP_BIAS = 72;
-     const WM_LEFT_BIAS = -64;
+     /* Margen superior (px) entre el borde del chat y el banner. */
+     const WM_TOP_BIAS = 40;
 
   let wmTop = null;
 
-  /* Centro horizontal del input. El input nunca cambia de X (ni con el
-     re-centrado del estado vacío ni al escribir), así que es estable. */
-  function inputCenter() {
-    const c = document.querySelector("#prompt-textarea");
-    if (!c) return null;
-    const r = c.getBoundingClientRect();
-    if (r.width > 0 && r.height > 0) return r.left + r.width / 2;
-    return null;
-  }
-
-  /* Rect de ancla: la columna de mensajes (área principal del chat) para
-     el TOP. NUNCA el composer (el top del composer no es el top del chat). */
+  /* Rect de ancla: la caja del área principal del chat. */
   function anchorRect() {
     const el = document.querySelector(
       '[data-testid="thread-container"], [data-testid*="thread"], main, .nova-anchor-thread'
@@ -376,24 +362,17 @@
     el.classList.toggle("nova-watermark-hidden", !show);
     if (!show) {
       wmTop = null;
+      el.style.removeProperty("--wm-left");
+      el.style.removeProperty("--wm-width");
+      el.style.removeProperty("--wm-top");
       return;
     }
     const r = anchorRect();
-    const wmState = readWatermark();
-    const center = inputCenter() || (r ? r.left + r.width / 2 : window.innerWidth / 2);
-    const cx = center + WM_LEFT_BIAS;
-    const clamp = Math.min(
-      Math.max(artW / 2 + 16, cx),
-      Math.max(artW / 2 + 16, window.innerWidth - artW / 2 - 16)
-    );
-    if (wmTop === null && r) {
-      wmTop = Math.max(24, Math.round(r.top) + WM_TOP_BIAS);
-    }
-    if (wmTop !== null) {
-      el.style.top = wmTop + "px";
-      el.style.left = Math.round(clamp) + "px";
-      el.style.transform = "translateX(-50%)";
-    }
+    if (!r) return;
+    el.style.setProperty("--wm-left", Math.round(r.left) + "px");
+    el.style.setProperty("--wm-width", Math.round(r.width) + "px");
+    if (wmTop === null) wmTop = Math.max(24, Math.round(r.top) + WM_TOP_BIAS);
+    el.style.setProperty("--wm-top", wmTop + "px");
   }
 
   let alignRaf = 0;

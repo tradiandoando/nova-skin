@@ -1085,11 +1085,18 @@ html.nova-skin-active[data-nova-fx="off"] {
    pointer-events none): nadie la tapa y no bloquea la interacción.
    Puede ser texto o una imagen PNG propia (nova.watermark). Sin uso
    de FX ni de reduced-motion. */
+/* Contenedor del banner: cubre EXACTAMENTE la caja del área principal del
+   chat (main/thread), no la ventana. content.js fija --wm-left/--wm-width
+   con el rect real de la columna; el centrado horizontal lo hace flex, así
+   es correcto en pantallas anchas y chicas y sigue al sidebar. --wm-top es
+   la única posición vertical (fijada arriba del contenido inicial). */
 html.nova-skin-active .nova-watermark {
   position: fixed;
   inset: auto;
-  top: 0;
-  left: 50%;
+  top: var(--wm-top, 64px);
+  left: var(--wm-left, 0px);
+  width: var(--wm-width, 100vw);
+  max-width: 100vw;
   z-index: 999;
   display: flex;
   align-items: flex-start;
@@ -1107,7 +1114,7 @@ html.nova-skin-active .nova-watermark {
   opacity: var(--wm-active, 0.75);
   transition: top 0.55s cubic-bezier(0.4, 0, 0.2, 1),
     left 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-    transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    width 0.4s cubic-bezier(0.4, 0, 0.2, 1),
     opacity 0.45s ease,
     visibility 0s;
 }
@@ -1121,7 +1128,7 @@ html.nova-skin-active .nova-watermark-hidden {
   visibility: hidden;
   transition: top 0.55s cubic-bezier(0.4, 0, 0.2, 1),
     left 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-    transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    width 0.4s cubic-bezier(0.4, 0, 0.2, 1),
     opacity 0.45s ease,
     visibility 0s linear 0.45s;
 }
