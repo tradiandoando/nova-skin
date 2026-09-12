@@ -361,7 +361,59 @@
   }
 
   function hasConversation() {
+    if (submitted) return true;
     return conversationSignal() !== null;
+  }
+
+  /* Detección del envío REAL del primer mensaje, independiente del DOM
+     que use ChatGPT: 1) Enter con texto → si el textarea se vacía a los
+     400ms, se envió; 2) evento submit del form del composer; 3) clic en el
+     botón enviar. Nada se bloquea ni se previene (passive / capture), con
+     lo que el funcionamiento del chat queda intacto. */
+  function trackSend() {
+    if (sendHooked) return;
+    const t = document.querySelector("#prompt-textarea");
+    if (!t) return;
+    sendHooked = true;
+    t.addEventListener(
+        "keydown",
+        (e) => {
+          if (e.key === "Enter" && !e.shiftKey && t.value.trim().length > 0) {
+            setTimeout(() => {
+              if (t.value.trim() === "") {
+                submitted = true;
+                scheduleAlign();
+              }
+            }, 400);
+          }
+        },
+        { passive: true }
+      );
+      const form = t.closest("form");
+      if (form) {
+        form.addEventListener(
+          "submit",
+          () => {
+            submitted = true;
+            scheduleAlign();
+          },
+          true
+        );
+      }
+    document.addEventListener(
+      "click",
+      (e) => {
+        if (
+          e.target &&
+          e.target.closest &&
+          e.target.closest('[data-testid="send-button"], [aria-label*="Send"], [aria-label*="submit"]')
+        ) {
+          submitted = true;
+          scheduleAlign();
+        }
+      },
+      true
+    );
   }
 
 /* El banner se posiciona cubriendo la caja del área principal del chat
@@ -375,6 +427,9 @@
 
   let wmTop = null;
   let weakConvSeen = null;
+  let submitted = false;
+  let emptyPolls = 0;
+  let sendHooked = false;
 
   /* Rect de ancla: la caja del área principal del chat. */
   function anchorRect() {
@@ -390,7 +445,26 @@
   function alignWatermark() {
     const el = document.getElementById(WATERMARK_ID);
     if (!el) return;
-    const show = !hasConversation();
+    let show = !hasConversation();
+    if (!show) {
+      /* Oculto. Pero si la UI ya volvió a un chat nuevo/vacío (sin
+         mensajes ni /c/ en la URL, composer sin texto), reactivamos el
+         banner después de 3 chequeos seguidos (~2s). */
+      const signal = conversationSignal();
+      const t = document.querySelector("#prompt-textarea");
+      const fresh =
+        signal === null &&
+        !/\/c\//.test(location.pathname) &&
+        (!t || t.value.trim() === "");
+      emptyPolls = fresh ? emptyPolls + 1 : 0;
+      if (emptyPolls >= 3) {
+        emptyPolls = 0;
+        submitted = false;
+        show = true;
+      }
+    } else {
+      emptyPolls = 0;
+    }
     el.classList.toggle("nova-watermark-hidden", !show);
     if (!show) {
       wmTop = null;
@@ -663,8 +737,12 @@
     watchReplies();
     /* Red de seguridad: aunque el observer se pierda mutaciones, cada
        700ms se re-chequea el estado (visible en chat vacío / oculto con
-       fade al iniciarse la conversación). Coste despreciable. */
-    setInterval(() => scheduleAlign(), 700);
+       fade al iniciarse la conversación). También vuelve a intentar el
+       tracking del envío hasta que exista el composer. Coste despreciable. */
+    setInterval(() => {
+      trackSend();
+      scheduleAlign();
+    }, 700);
   }
 
   chrome.runtime.onMessage.addListener((msg) => {
