@@ -333,15 +333,32 @@
     return document.querySelector('[data-message-author-role="user"]') !== null;
   }
 
-  /* Top fijado una sola vez: el área inicial del chat no se mueve cuando
+/* Top fijado una sola vez: el área inicial del chat no se mueve cuando
      ChatGPT re-centra su estado vacío, y el banner no debe viajar ni
-     seguir el scroll. La horizontal SIEMPRE se recalcula sobre la columna
-     real (main/thread), así el banner sigue al sidebar y al tamaño de
-     ventana en todo momento. */
+     seguir el scroll. La horizontal SIEMPRE se recalcula, anclada al
+     centro del composer (#prompt-textarea), que es la referencia exacta
+     "centrado sobre el input". Si el composer aún no existe, cae en la
+     columna principal (thread/main). */
+
+     /* Ajuste fino (px): cuánto baja del borde superior del chat y el
+        sesgo horizontal. Se afina acá. */
+     const WM_TOP_BIAS = 56;
+     const WM_LEFT_BIAS = -38;
+
   let wmTop = null;
 
-  /* Rect de ancla: la columna de mensajes (área principal del chat).
-     NUNCA el composer (el top del composer no es el top del chat). */
+  /* Centro horizontal del input. El input nunca cambia de X (ni con el
+     re-centrado del estado vacío ni al escribir), así que es estable. */
+  function inputCenter() {
+    const c = document.querySelector("#prompt-textarea");
+    if (!c) return null;
+    const r = c.getBoundingClientRect();
+    if (r.width > 0 && r.height > 0) return r.left + r.width / 2;
+    return null;
+  }
+
+  /* Rect de ancla: la columna de mensajes (área principal del chat) para
+     el TOP. NUNCA el composer (el top del composer no es el top del chat). */
   function anchorRect() {
     const el = document.querySelector(
       '[data-testid="thread-container"], [data-testid*="thread"], main, .nova-anchor-thread'
@@ -363,17 +380,14 @@
     }
     const r = anchorRect();
     const wmState = readWatermark();
-    const wmText = wmState.image ? "OPEN NOVA" : String(wmState.text || "OPEN NOVA");
-    const artW =
-      Math.max(220, asciiFitPx(wmText) * 0.62 * asciiCols(wmText)) +
-      (el.querySelector(".nova-watermark-word") ? 56 : 0);
-    const cx = r ? r.left + r.width / 2 - 24 : window.innerWidth / 2 - 24;
+    const center = inputCenter() || (r ? r.left + r.width / 2 : window.innerWidth / 2);
+    const cx = center + WM_LEFT_BIAS;
     const clamp = Math.min(
       Math.max(artW / 2 + 16, cx),
       Math.max(artW / 2 + 16, window.innerWidth - artW / 2 - 16)
     );
     if (wmTop === null && r) {
-      wmTop = Math.max(24, Math.round(r.top) + 42);
+      wmTop = Math.max(24, Math.round(r.top) + WM_TOP_BIAS);
     }
     if (wmTop !== null) {
       el.style.top = wmTop + "px";
