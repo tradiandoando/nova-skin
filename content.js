@@ -342,8 +342,8 @@
 
      /* Ajuste fino (px): cuánto baja del borde superior del chat y el
         sesgo horizontal. Se afina acá. */
-     const WM_TOP_BIAS = 56;
-     const WM_LEFT_BIAS = -38;
+     const WM_TOP_BIAS = 72;
+     const WM_LEFT_BIAS = -64;
 
   let wmTop = null;
 
@@ -444,11 +444,31 @@
     const cx = r.left + r.width / 2;
     const cy = r.top + r.height / 2;
     const top = document.elementFromPoint(cx, cy);
+    const rectOf = (node) => {
+      const rr = node.getBoundingClientRect();
+      return [Math.round(rr.left), Math.round(rr.top), Math.round(rr.width), Math.round(rr.height)];
+    };
+    const prompt = document.querySelector("#prompt-textarea");
+    const inputCx = prompt ? prompt.getBoundingClientRect().left + prompt.getBoundingClientRect().width / 2 : null;
+    const mainEl = document.querySelector("main");
+    const threadEl = document.querySelector(
+      '[data-testid="thread-container"], [data-testid*="thread"], .nova-anchor-thread'
+    );
+    const geo = {
+      bannerCx: Math.round(cx),
+      inputCx: inputCx !== null ? Math.round(inputCx) : null,
+      diff: inputCx !== null ? Math.round(cx - inputCx) : null,
+      main: mainEl ? rectOf(mainEl) : null,
+      thread: threadEl ? rectOf(threadEl) : null,
+      viewport: [window.innerWidth, window.innerHeight],
+      banner: [Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height)],
+    };
     return {
       exists: true,
       style: [s.display, s.zIndex, s.fontSize, s.opacity, s.visibility].join(","),
       size: [Math.round(r.width), Math.round(r.height)],
       onTop: top ? top.tagName + "." + String(top.className || "").slice(0, 60) : null,
+      geo,
     };
   }
 
