@@ -339,6 +339,19 @@
      hasta que haya resize, se oculte (conversación) o cambie de chat. */
   let wmPin = null;
 
+  /* Rect de ancla: la columna de mensajes. Priorizamos el thread; si aún
+     no existe (DOM no terminó de armar el estado vacío) usamos <main>,
+     que es estable. NUNCA el composer para fijar el top. */
+  function anchorRect() {
+    const el = document.querySelector(
+      '[data-testid="thread-container"], [data-testid*="thread"], main, .nova-anchor-thread'
+    );
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    if (r.width > 0 && r.height > 0) return r;
+    return null;
+  }
+
   function alignWatermark() {
     const el = document.getElementById(WATERMARK_ID);
     if (!el) return;
@@ -348,26 +361,30 @@
       wmPin = null;
       return;
     }
-    if (!wmPin) {
-      const anchor = document.querySelector(
-        '[data-testid="thread-container"], .nova-anchor-thread, #prompt-textarea'
-      );
-      const r = anchor && anchor.getBoundingClientRect ? anchor.getBoundingClientRect() : null;
-      let cx = window.innerWidth / 2;
-      if (r && r.width > 0 && r.height > 0) cx = r.left + r.width / 2;
+    const r = anchorRect();
+    if (r) {
       const wmState = readWatermark();
       const wmText = wmState.image ? "OPEN NOVA" : String(wmState.text || "OPEN NOVA");
       const artW =
         Math.max(220, asciiFitPx(wmText) * 0.62 * asciiCols(wmText)) +
         (el.querySelector(".nova-watermark-word") ? 56 : 0);
-      const clamp = Math.min(
-        Math.max(artW / 2 + 16, cx),
+      const cx = Math.min(
+        Math.max(artW / 2 + 16, r.left + r.width / 2),
         Math.max(artW / 2 + 16, window.innerWidth - artW / 2 - 16)
       );
-      wmPin = {
-        left: Math.round(clamp),
-        top: Math.max(8, r && r.top ? Math.round(r.top) + 14 : 16),
-      };
+      if (!wmPin) {
+        wmPin = {
+          left: Math.round(cx),
+          top: Math.max(8, Math.round(r.top) + 14),
+        };
+      }
+    } else if (!wmPin) {
+      /* AÚN sin layout: posición provisional centrada en la ventana,
+         SIN fijar el pin. Al aparecer un ancla real se re-calcula. */
+      el.style.top = "16px";
+      el.style.left = "50%";
+      el.style.transform = "translateX(-50%)";
+      return;
     }
     if (wmPin) {
       el.style.top = wmPin.top + "px";
