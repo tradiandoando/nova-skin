@@ -4,6 +4,7 @@
   const STORAGE_KEY = "nova.theme";
   const FX_KEY = "nova.fx";
   const CUSTOM_KEY = "nova.customThemes";
+  const WATERMARK_KEY = "nova.watermark";
 
   const GROUPS = [
     {
@@ -176,7 +177,7 @@
   const state = {
     theme: "",
     fx: "on",
-    watermark: null,
+    watermark: loadLocal(WATERMARK_KEY, null),
     customThemes: loadLocal(CUSTOM_KEY, []).filter(validCustom),
   };
 
@@ -279,6 +280,7 @@
   const pushWatermark = () => {
     const wm = { text: wmText.value.trim(), opacity: Number(wmOpacity.value) };
     state.watermark = wm.text ? wm : null;
+    saveLocal(WATERMARK_KEY, state.watermark);
     setWmUI(state.watermark);
     sendMessage({ type: "nova:setWatermark", watermark: state.watermark });
   };
@@ -402,6 +404,7 @@
         state.fx = res.fx === "off" ? "off" : "on";
         state.customThemes = (res.customThemes || []).filter(validCustom);
         if (res.watermark && res.watermark.text) state.watermark = res.watermark;
+        saveLocal(WATERMARK_KEY, state.watermark);
         saveLocal(CUSTOM_KEY, state.customThemes);
         render();
         applyPreview(state.theme);
