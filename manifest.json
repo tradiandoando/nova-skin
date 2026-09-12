@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "NOVA Skin",
-  "version": "0.7.36",
+  "version": "0.7.40",
   "description": "NOVA visual layer for ChatGPT.",
   "icons": {
     "16": "icons/icon16.png",
@@ -17,6 +17,13 @@
       "32": "icons/icon32.png"
     }
   },
+  "permissions": [
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://chatgpt.com/*",
+    "https://chat.openai.com/*"
+  ],
   "content_scripts": [
     {
       "matches": [

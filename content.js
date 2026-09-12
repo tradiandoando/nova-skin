@@ -1,6 +1,12 @@
 (() => {
   "use strict";
 
+  /* El popup puede re-inyectar este script (chrome.scripting) cuando la
+     pestaña quedó sin content script tras recargar la extensión. Este
+     guard evita doble inicialización (observers, listeners, etc.). */
+  if (window.__NOVA_SKIN_ACTIVE) return;
+  window.__NOVA_SKIN_ACTIVE = true;
+
   const NOVA_CLASS = "nova-skin-active";
   const STORAGE_KEY = "nova.theme";
   const FX_KEY = "nova.fx";

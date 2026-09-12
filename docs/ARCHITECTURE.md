@@ -142,9 +142,12 @@ ChatGPT tab is open.
 - `data-nova-fx="off"` (popup toggle) hides `::before/::after` entirely and
   zeroes `--nova-speed*`, so NOVA motion — but not ChatGPT's native streaming
   dots — stops instantly.
-- The personal watermark (`.nova-watermark`, `z-index: -1`) is a static layer
-  above the nebula and under the veil: no motion, safe under reduced motion and
-  FX-off. Its text/opacity are per-user page storage (`nova.watermark`).
+- The personal watermark (`.nova-watermark`, `z-index: 999`) is a static,
+  inert overlay (pointer-events: none): it floats above the chat content but
+  never blocks interaction, and fades out as soon as the first message is
+  sent. It must NOT use negative z-index: ChatGPT's opaque/graphite surfaces
+  (topbar/composer glass + unmatched wrappers) would paint above it and hide
+  it. Its text/opacity are per-user page storage (`nova.watermark`).
 - `prefers-reduced-motion: reduce` forces `0.01ms` durations/animations on the
   entire page.
 

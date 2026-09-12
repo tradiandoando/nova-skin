@@ -281,7 +281,7 @@
   const setWmStatus = (d) => {
     if (!d) {
       wmStatus.className = "wm-status";
-      wmStatus.textContent = "Abrí ChatGPT y tocá \"NOVA Skin\" para verificar.";
+      wmStatus.textContent = "Escribiendo nuevo chat en la pestaña de ChatGPT…";
       return;
     }
     if (!d.exists) {
@@ -290,8 +290,16 @@
         "La marca no se creó en la página (content.js viejo o página no recargada). Recargá la extensión y luego Ctrl+R en ChatGPT.";
       return;
     }
-    const bad = d.style && !d.style.includes("block");
-    const tapado = d.onTop && d.onTop !== "BODY" && d.onTop.startsWith("DIV");
+    const parts = String(d.style || "").split(",");
+    const bad =
+      d.style &&
+      (parts[0] === "none" || (parts[4] || "").includes("hidden") || parts[3] === "0");
+    const tapado =
+      d.onTop &&
+      d.onTop !== "BODY" &&
+      d.onTop !== "HTML" &&
+      !/nova-watermark/.test(d.onTop) &&
+      d.onTop !== "MAIN.";
     if (bad) {
       wmStatus.className = "wm-status err";
       wmStatus.textContent = "Creada pero invisible en CSS: " + d.style;
@@ -495,7 +503,13 @@
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const tab = tabs && tabs[0];
     if (!tab) return;
-    chrome.tabs.sendMessage(tab.id, { type: "nova:getState" }, (res) => {
+    const requestState = (cb) => {
+      chrome.tabs.sendMessage(tab.id, { type: "nova:getState" }, (res) => {
+        if (chrome.runtime.lastError) return cb(null);
+        cb(res);
+      });
+    };
+    const handle = (res) => {
       if (res && typeof res.theme === "string" && findTheme(res.theme)) {
         state.theme = res.theme;
         state.fx = res.fx === "off" ? "off" : "on";
@@ -509,6 +523,32 @@
         setWmUI(state.watermark);
         setWmStatus(res.wmDebug);
         setModel(res.model);
+      }
+    };
+    requestState((res) => {
+      if (res) return handle(res);
+      /* Sin content script en la pestaña (típico tras recargar la
+         extensión sin recargar la pestaña). Lo inyectamos a mano y
+         reintentamos. */
+      wmStatus.className = "wm-status";
+      wmStatus.textContent = "Inyectando NOVA Skin en la pestaña activa…";
+      try {
+        chrome.scripting.executeScript(
+          { target: { tabId: tab.id }, files: ["content.js"] },
+          () => {
+            if (chrome.runtime.lastError) {
+              wmStatus.className = "wm-status err";
+              wmStatus.textContent =
+                "No puedo actuar en esta pestaña. Abrí una pestaña de ChatGPT vacía y tocá de nuevo el icono.";
+              return;
+            }
+            requestState(handle);
+          }
+        );
+      } catch {
+        wmStatus.className = "wm-status err";
+        wmStatus.textContent =
+          "No puedo actuar en esta pestaña. Abrí una pestaña de ChatGPT vacía y tocá de nuevo el icono de NOVA Skin.";
       }
     });
   });

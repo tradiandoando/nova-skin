@@ -63,7 +63,7 @@ NOVA Skin currently runs as an unpacked Chrome / Edge extension.
 
 Clone the repository or download the release ZIP:
 
-`nova-skin-v0.7.36.zip`
+`nova-skin-v0.7.40.zip`
 
 ### 2. Open the extensions page
 
@@ -185,7 +185,7 @@ You can experiment with visual identity without modifying the core architecture.
 
 ## Personal watermark
 
-NOVA Skin can place a personal text watermark on the page background — behind the chat, above the nebula layer.
+NOVA Skin can place a personal text watermark over the page — an inert banner that never blocks interaction and fades out once the first message is sent.
 
 From the popup:
 
@@ -368,7 +368,7 @@ NOVA Skin is an independent project and is **not affiliated with, endorsed by, o
 
 ## Status
 
-**Version:** `0.7.36`
+**Version:** `0.7.40`
 
 **Status:** Public Community Preview
 
