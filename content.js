@@ -278,11 +278,17 @@
       }
       el.querySelector(".nova-watermark-word").className = "nova-watermark-word";
       el.querySelector(".nova-watermark-img").src = wm.image;
-      if (textEl) textEl.textContent = "";
+      if (textEl) {
+        textEl.textContent = "";
+        textEl.classList.remove("nova-watermark-ascii");
+        textEl.style.fontSize = "";
+        textEl.style.lineHeight = "";
+      }
     } else {
       if (imgEl) imgEl.remove();
       if (textEl) {
         textEl.textContent = asciiRows(wm.text);
+        textEl.classList.add("nova-watermark-ascii");
         textEl.style.fontSize = asciiFitPx(wm.text) + "px";
         textEl.style.lineHeight = "1.04";
       }
