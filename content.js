@@ -9,7 +9,6 @@
   const WATERMARK_ID = "nova-watermark";
   const DEFAULT_WATERMARK = { text: "NOVA", opacity: 75 };
   const WATERMARK_OFF = { off: true };
-  const WMPOS_KEY = "nova.wmPos";
   const CUSTOM_STYLE_ID = "nova-custom-styles";
 
   const DEFAULT_THEME = "nova";
@@ -114,14 +113,6 @@
     return sanitizeWatermark(stored);
   }
 
-  function readWmPos() {
-    try {
-      return localStorage.getItem(WMPOS_KEY) === "lateral" ? "lateral" : "top";
-    } catch (_) {
-      return "top";
-    }
-  }
-
   function ensureWatermark() {
     const wm = readWatermark();
     let el = document.getElementById(WATERMARK_ID);
@@ -156,8 +147,6 @@
       if (textEl) textEl.textContent = wm.text;
     }
     el.style.setProperty("--wm-active", wm.opacity / 100);
-    el.classList.toggle("nova-watermark-lateral", readWmPos() === "lateral");
-    updateDim(el, true);
     scheduleAlign();
   }
 
@@ -174,36 +163,41 @@
   /* Alinea el banner con la columna del input/composer (no con el
      centro del viewport, que queda corrido cuando el sidebar está
      abierto). Ancla a thread-container / #prompt-textarea. */
+  /* Estados de posición (automáticos):
+     - "center": sin conversación, la marca aparece grande centrada.
+     - "side": al haber 1+ mensaje del usuario, se desliza sola al
+       lateral izquierdo superior, compacta y horizontal. */
+  function hasConversation() {
+    return document.querySelector('[data-message-author-role="user"]') !== null;
+  }
+
   function alignWatermark() {
     const el = document.getElementById(WATERMARK_ID);
     if (!el) return;
-    if (el.classList.contains("nova-watermark-lateral")) {
-      el.style.top = "";
-      el.style.transform = "";
-      return;
-    }
-    let cx = window.innerWidth / 2;
-    let anchor = document.querySelector(
-      '[data-testid="thread-container"], .nova-anchor-thread, #prompt-textarea'
-    );
-    if (!anchor || !anchor.getBoundingClientRect) anchor = null;
-    if (anchor) {
-      const r = anchor.getBoundingClientRect();
-      if (r && r.width > 0) {
-        cx = r.left + r.width / 2;
-        el.style.top = Math.max(40, Math.round(r.top) + 8) + "px";
-      } else {
-        el.style.top = "";
-      }
+    const side = hasConversation();
+    el.classList.toggle("nova-watermark-side", side);
+    if (side) {
+      let anchor = document.querySelector(
+        '[data-testid="thread-container"], .nova-anchor-thread, #prompt-textarea'
+      );
+      const r = anchor && anchor.getBoundingClientRect
+        ? anchor.getBoundingClientRect()
+        : null;
+      const left = r && r.width > 0 ? r.left : 12;
+      const top = r && r.height > 0 ? r.top : 0;
+      el.style.top = Math.max(8, Math.round(top) + 12) + "px";
+      el.style.left = Math.max(8, Math.round(left) + 16) + "px";
+      el.style.transform = "none";
     } else {
-      el.style.top = "";
+      el.style.top = "50%";
+      el.style.left = "50%";
+      el.style.transform = "translate(-50%, -50%)";
     }
-    el.style.transform = "translateX(" + Math.round(cx - window.innerWidth / 2) + "px)";
   }
 
   /* Auto-atenuación: a plena opacidad en el tope del chat; al
      scrollear para leer se apaga (no se interpone con el texto). */
-  function updateDim(el, manual) {
+  function updateDim(el) {
     const e = el || document.getElementById(WATERMARK_ID);
     if (!e) return;
     const thread = findThread && findThread();
@@ -211,7 +205,6 @@
       ? thread.scrollTop > 120
       : window.scrollY > 120;
     e.classList.toggle("nova-watermark-dim", scrolled);
-    if (manual) e.classList.remove("nova-watermark-dim");
   }
 
   let alignRaf = 0;
@@ -238,11 +231,13 @@
     if (typeof MutationObserver !== "function") return;
     assistantCount = document.querySelectorAll('[data-message-author-role="assistant"]').length;
     let raf = 0;
+    const alignWatermarkCross = () => scheduleAlign();
     const check = () => {
       raf = 0;
       const n = document.querySelectorAll('[data-message-author-role="assistant"]').length;
       if (n > assistantCount) pulseResponse();
       assistantCount = n;
+      alignWatermarkCross();
     };
     const mo = new MutationObserver(() => {
       if (raf) return;
@@ -438,7 +433,6 @@
         customThemes: customThemes,
         watermark: readWatermark(),
         wmDebug: watermarkDebug(),
-        wmPos: readWmPos(),
         model: readModel(),
       };
     }
@@ -454,10 +448,6 @@
       const wm = sanitizeWatermark(msg.watermark);
       localStorage.setItem(WATERMARK_KEY, wm ? JSON.stringify(wm) : JSON.stringify(WATERMARK_OFF));
       ensureWatermark();
-    } else if (msg.type === "nova:setWmPos") {
-      localStorage.setItem(WMPOS_KEY, msg.pos === "lateral" ? "lateral" : "top");
-      ensureWatermark();
-      scheduleAlign();
     } else if (msg.type === "nova:setCustomThemes" && Array.isArray(msg.themes)) {
       customThemes = msg.themes.filter(validCustom);
       writeJson(CUSTOM_KEY, customThemes);

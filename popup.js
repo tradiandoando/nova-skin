@@ -5,7 +5,6 @@
   const FX_KEY = "nova.fx";
   const CUSTOM_KEY = "nova.customThemes";
   const WATERMARK_KEY = "nova.watermark";
-  const WMPOS_KEY = "nova.wmPos";
 
   const GROUPS = [
     {
@@ -179,7 +178,6 @@
     theme: "",
     fx: "on",
     watermark: loadLocal(WATERMARK_KEY, null),
-    wmPos: "top",
     customThemes: loadLocal(CUSTOM_KEY, []).filter(validCustom),
   };
 
@@ -272,16 +270,8 @@
   const wmImg = document.getElementById("wmImg");
   const wmImgPreview = document.getElementById("wmImgPreview");
   const wmImgText = document.getElementById("wmImgText");
-  const wmPosTop = document.getElementById("wmPosTop");
-  const wmPosLateral = document.getElementById("wmPosLateral");
   const modelChip = document.getElementById("modelChip");
   let wmImage = null;
-
-  const setWmPosUI = (pos) => {
-    const lateral = pos === "lateral";
-    wmPosTop.classList.toggle("active", !lateral);
-    wmPosLateral.classList.toggle("active", lateral);
-  };
 
   const setModel = (name) => {
     modelChip.hidden = !name;
@@ -348,16 +338,6 @@
     setWmUI(state.watermark);
     sendMessage({ type: "nova:setWatermark", watermark: state.watermark });
   };
-
-  document.querySelectorAll(".pos-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const pos = btn.getAttribute("data-pos");
-      state.wmPos = pos;
-      saveLocal(WMPOS_KEY, pos);
-      setWmPosUI(pos);
-      sendMessage({ type: "nova:setWmPos", pos });
-    });
-  });
 
   wmImg.addEventListener("change", () => {
     const f = wmImg.files && wmImg.files[0];
@@ -499,7 +479,6 @@
   setFxUI(state.fx);
   setWmUI(state.watermark);
   setWmStatus(null);
-  setWmPosUI(state.wmPos);
   setModel("");
 
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -518,11 +497,6 @@
         setFxUI(state.fx);
         setWmUI(state.watermark);
         setWmStatus(res.wmDebug);
-        if (res.wmPos) {
-          state.wmPos = res.wmPos;
-          saveLocal(WMPOS_KEY, res.wmPos);
-          setWmPosUI(state.wmPos);
-        }
         setModel(res.model);
       }
     });

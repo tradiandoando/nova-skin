@@ -268,30 +268,6 @@
     gap: 6px;
   }
 
-  .wm-pos {
-    display: flex;
-    gap: 6px;
-  }
-
-  .pos-btn {
-    flex: 1;
-    font-size: 11px;
-    letter-spacing: 0.03em;
-    padding: 5px 0;
-    border-radius: 8px;
-    border: 1px solid rgba(152,158,196,0.22);
-    background: rgba(255,255,255,0.02);
-    color: #b9bcc9;
-    cursor: pointer;
-    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-  }
-
-  .pos-btn.active {
-    background: rgba(79,224,196,0.12);
-    border-color: rgba(79,224,196,0.45);
-    color: #9ff0dd;
-  }
-
   .wm-preview {
     width: 34px;
     height: 34px;
@@ -571,10 +547,6 @@
       <input type="range" id="wmOpacity" min="10" max="100" value="75" aria-label="Watermark opacity">
       <span>80%</span>
     </div>
-    <div class="wm-pos">
-      <button class="pos-btn active" id="wmPosTop" data-pos="top">Arriba</button>
-      <button class="pos-btn" id="wmPosLateral" data-pos="lateral">Lateral</button>
-    </div>
     <div class="wm-img-row">
       <label class="tool-btn" for="wmImg">Imagen PNG</label>
       <input type="file" id="wmImg" accept="image/png" hidden>
@@ -592,7 +564,7 @@
   <div class="tool-note" id="toolNote"></div>
 
   <div class="footer">
-    <span class="version">v0.7.16</span>
+    <span class="version">v0.7.17</span>
     <div class="dot"></div>
   </div>
 
