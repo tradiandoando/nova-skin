@@ -498,6 +498,25 @@
     background: #4fe0c4;
     flex-shrink: 0;
   }
+
+  .matrix-pal {
+    margin-top: 2px;
+  }
+
+  .matrix-pal .tool-btn {
+    padding: 6px 8px;
+    font-size: 10px;
+  }
+
+  .matrix-pal .tool-btn.active {
+    background: rgba(139, 124, 255, 0.14);
+    border-color: rgba(139, 124, 255, 0.5);
+    color: #e8ecf7;
+  }
+
+  .wm-label {
+    letter-spacing: 0.04em;
+  }
 </style>
 </head>
 <body>
@@ -507,6 +526,16 @@
     <div class="title">NOVA Skin</div>
   </div>
   <div class="subtitle">Select a theme for ChatGPT</div>
+
+  <div class="fx-row auto-row">
+    <div class="fx-info">
+      <div class="fx-name">Auto theme</div>
+      <div class="fx-desc">Sigue el modo claro/oscuro del sistema</div>
+    </div>
+    <button class="fx-toggle" id="autoToggle" role="switch" aria-checked="false" aria-label="Auto theme">
+      <span class="fx-knob"></span>
+    </button>
+  </div>
 
   <div class="model-chip" id="modelChip" hidden></div>
 
@@ -530,6 +559,32 @@
     <button class="fx-toggle" id="fxToggle" role="switch" aria-checked="true" aria-label="Atmosphere FX">
       <span class="fx-knob"></span>
     </button>
+  </div>
+
+  <div class="fx-row matrix-row">
+    <div class="fx-info">
+      <div class="fx-name">Matrix</div>
+      <div class="fx-desc">Orbs · código ascendente</div>
+    </div>
+    <button class="fx-toggle" id="matrixToggle" role="switch" aria-checked="true" aria-label="Matrix">
+      <span class="fx-knob"></span>
+    </button>
+  </div>
+  <div class="wm-fields" id="matrixFields" hidden>
+    <div class="wm-scale">
+      <span>10</span>
+      <input type="range" id="matrixDensity" min="10" max="35" value="25" aria-label="Matrix density">
+      <span>35</span>
+    </div>
+    <div class="wm-scale">
+      <span class="wm-label">Lento</span>
+      <input type="range" id="matrixSpeed" min="1" max="10" value="6" aria-label="Matrix speed">
+      <span class="wm-label">Rápido</span>
+    </div>
+    <div class="tools-row matrix-pal">
+      <button class="tool-btn active" id="matrixPalAll">Todos los temas</button>
+      <button class="tool-btn" id="matrixPalTheme">Tema activo</button>
+    </div>
   </div>
 
   <div class="fx-row wm-row">

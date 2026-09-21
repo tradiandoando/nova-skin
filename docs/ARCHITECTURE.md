@@ -128,8 +128,8 @@ The atmosphere still derives from the accent via the core's `color-mix`.
 runs in the extension origin (a different storage), so it behaves as a remote
 control:
 
-- popup → page: `nova:setTheme` / `nova:setFx` / `nova:setWatermark` / `nova:setCustomThemes`
-- popup ← page: `nova:getState` returns `{ theme, fx, watermark, customThemes }` on open
+- popup → page: `nova:setTheme` / `nova:setFx` / `nova:setMatrix` / `nova:setWatermark` / `nova:setCustomThemes` / `nova:setAuto`
+- popup ← page: `nova:getState` returns `{ theme, fx, matrix, auto, watermark, customThemes }` on open (theme is the *effective* one when auto is on)
 
 Every mutation writes the page storage first (content.js), so all three states
 survive reloads. The popup's own `localStorage` is only a fallback when no

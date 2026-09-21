@@ -766,17 +766,17 @@
      Sistema independiente de la atmosphere: burbujas/partículas que
      nacen desde abajo, ascienden con deriva lateral suave y se
      desvanecen en la parte superior. Vive en un único contenedor
-     (nova-matrix-field) creado en <body>; arranca con FX on y se
-     detiene/limpia con FX off. Respeta prefers-reduced-motion (no
-     crea nada) y usa un z-index positivo y NO bloquea la UI. */
+     (nova-matrix-field) creado en <body>. La config vive en page
+     storage (nova.matrix — popup): on (arranca con FX on), density
+     (total simultáneas ~10-35), speed (1 lenta → 10 rápida) y
+     palette ("all" = acentos de todos los themes, "theme" = acentos
+     del tema activo). Respeta prefers-reduced-motion (no crea nada)
+     y usa un z-index positivo y NO bloquea la UI. */
   const MATRIX_ID = "nova-matrix-field";
+  const MATRIX_KEY = "nova.matrix";
+  const MATRIX_DEFAULTS = { on: true, density: 25, speed: 6, palette: "all" };
   const MATRIX_CHARS = ["0", "1", "·"];
   const MATRIX_CODE = ["0", "1"];
-  const MATRIX_MAX_PARTICLES = 15;
-  const MATRIX_MAX_BUBBLES = 10;
-  const MATRIX_MAX = MATRIX_MAX_PARTICLES + MATRIX_MAX_BUBBLES;
-  const MATRIX_MIN_MS = 300;
-  const MATRIX_MAX_MS = 420;
   /* Acentos de los themes disponibles (nova, cosmic, aurora, mono,
      sunset + variantes light): cada partícula/burbuja toma un color
      distinto, todo el espectro NOVA conviviendo en el campo. */
@@ -796,6 +796,72 @@
   let matrixParts = 0;
   let matrixBubbles = 0;
   let matrixRunning = false;
+  let matrixCaps = { parts: 15, bubbles: 10 };
+  let matrixLifeBase = 6000;
+  let matrixInterval = 300;
+  let matrixPalMode = "all";
+
+  function readMatrix() {
+    const d = readJson(MATRIX_KEY, null);
+    const out = Object.assign({}, MATRIX_DEFAULTS);
+    if (!d || typeof d !== "object") return out;
+    out.on = d.on !== false;
+    const density = Math.round(Number(d.density));
+    if (Number.isFinite(density)) out.density = Math.max(10, Math.min(35, density));
+    const speed = Math.round(Number(d.speed));
+    if (Number.isFinite(speed)) out.speed = Math.max(1, Math.min(10, speed));
+    out.palette = d.palette === "theme" ? "theme" : "all";
+    return out;
+  }
+
+  function sanitizeMatrix(m) {
+    const cur = readMatrix();
+    if (!m || typeof m !== "object") return cur;
+    const out = Object.assign({}, cur);
+    if (typeof m.on === "boolean") out.on = m.on;
+    const density = Math.round(Number(m.density));
+    if (Number.isFinite(density)) out.density = Math.max(10, Math.min(35, density));
+    const speed = Math.round(Number(m.speed));
+    if (Number.isFinite(speed)) out.speed = Math.max(1, Math.min(10, speed));
+    if (m.palette === "all" || m.palette === "theme") out.palette = m.palette;
+    return out;
+  }
+
+  /* Deriva caps, duración e intervalo del spawn desde la config. */
+  function matrixApplyConfig() {
+    const s = readMatrix();
+    const total = s.density;
+    matrixCaps.parts = Math.max(6, Math.round(total * 0.6));
+    matrixCaps.bubbles = Math.max(2, Math.round(total * 0.4));
+    matrixLifeBase = Math.round((12 - s.speed) * 1000);
+    const avgLife = Math.max(matrixLifeBase * 1.25, 800);
+    matrixInterval = Math.max(80, Math.round(avgLife / total));
+    matrixPalMode = s.palette;
+    return s;
+  }
+
+  function matrixColor() {
+    if (matrixPalMode === "theme") {
+      const cs = getComputedStyle(document.documentElement);
+      const c = [];
+      for (const t of ["--nova-accent-1", "--nova-accent-2", "--nova-accent-3"]) {
+        const v = String(cs.getPropertyValue(t) || "").trim();
+        if (v && v !== "none" && v !== "transparent" && /^(#|rgb|color-mix)/i.test(v)) c.push(v);
+      }
+      if (c.length) return matrixPick(c);
+    }
+    return matrixPick(MATRIX_COLORS);
+  }
+
+  /* Sincroniza el campo con el estado real (config + FX). */
+  function matrixSync() {
+    const s = matrixApplyConfig();
+    if (!s.on || readFx() === "off" || matrixReduceMotion()) {
+      matrixStop();
+      return;
+    }
+    matrixStart();
+  }
 
   function matrixReduceMotion() {
     return (
@@ -845,13 +911,13 @@
       el.className = "nova-matrix-particle";
       el.textContent = matrixPick(MATRIX_CHARS);
     }
-    const durMs = 6000 + Math.floor(Math.random() * 5000);
+    const durMs = matrixLifeBase + Math.floor(Math.random() * matrixLifeBase * 0.5);
     const amp = Math.round(Math.random() * 60 - 30);
     el.style.setProperty("--mx-x", (4 + Math.random() * 92).toFixed(1) + "%");
     el.style.setProperty("--mx-size", (bubble ? 10 + Math.random() * 12 : 9 + Math.random() * 5).toFixed(1) + "px");
     el.style.setProperty("--mx-dur", durMs + "ms");
     el.style.setProperty("--mx-opacity", (bubble ? 0.16 + Math.random() * 0.24 : 0.1 + Math.random() * 0.22).toFixed(2));
-    el.style.setProperty("--mx-color", matrixPick(MATRIX_COLORS));
+    el.style.setProperty("--mx-color", matrixColor());
     el.style.setProperty("--mx-drift", amp + "px");
     el.style.setProperty("--mx-drift-back", Math.round(amp * -0.7) + "px");
     field.appendChild(el);
@@ -872,7 +938,7 @@
     if (matrixTimer) return;
     matrixTimer = setTimeout(
       matrixTick,
-      MATRIX_MIN_MS + Math.random() * (MATRIX_MAX_MS - MATRIX_MIN_MS)
+      matrixInterval * (0.85 + Math.random() * 0.3)
     );
   }
 
@@ -889,12 +955,12 @@
     const field = ensureMatrixField();
     if (field) {
       let wantBubble;
-      if (matrixBubbles >= MATRIX_MAX_BUBBLES) wantBubble = false;
-      else if (matrixParts >= MATRIX_MAX_PARTICLES) wantBubble = true;
+      if (matrixBubbles >= matrixCaps.bubbles) wantBubble = false;
+      else if (matrixParts >= matrixCaps.parts) wantBubble = true;
       else wantBubble = Math.random() < 0.4;
       if (
-        (wantBubble && matrixBubbles < MATRIX_MAX_BUBBLES) ||
-        (!wantBubble && matrixParts < MATRIX_MAX_PARTICLES)
+        (wantBubble && matrixBubbles < matrixCaps.bubbles) ||
+        (!wantBubble && matrixParts < matrixCaps.parts)
       ) {
         spawnMatrixItem(field, wantBubble);
       }
@@ -904,7 +970,9 @@
   }
 
   function matrixStart() {
-    if (matrixRunning || matrixReduceMotion()) return;
+    if (matrixReduceMotion()) return;
+    const s = matrixApplyConfig();
+    if (!s.on || matrixRunning) return;
     if (!document.body) {
       if (typeof requestAnimationFrame === "function") requestAnimationFrame(matrixStart);
       return;
@@ -929,12 +997,65 @@
     matrixBubbles = 0;
   }
 
+  /* ---------- tema automático (sigue prefers-color-scheme) ----------
+     Cuando auto está activo el tema efectivo se elige según el modo
+     claro/oscuro del sistema: auto.dark para dark, auto.light para
+     light. El tema manual (nova.theme) sigue intacto y volver a
+     elegir un tema manual desactiva auto. */
+  const AUTO_KEY = "nova.auto";
+  const AUTO_DEFAULTS = { on: false, dark: "nova", light: "nova-light" };
+
+  function readAuto() {
+    const d = readJson(AUTO_KEY, null);
+    const out = Object.assign({}, AUTO_DEFAULTS);
+    if (!d || typeof d !== "object") return out;
+    if (typeof d.on === "boolean") out.on = d.on;
+    if (isValidThemeId(d.dark)) out.dark = d.dark;
+    if (isValidThemeId(d.light)) out.light = d.light;
+    return out;
+  }
+
+  function sanitizeAuto(m) {
+    const cur = readAuto();
+    if (!m || typeof m !== "object") return cur;
+    const out = Object.assign({}, cur);
+    if (typeof m.on === "boolean") out.on = m.on;
+    if (typeof m.dark === "string" && isValidThemeId(m.dark)) out.dark = m.dark;
+    if (typeof m.light === "string" && isValidThemeId(m.light)) out.light = m.light;
+    return out;
+  }
+
+  function systemDark() {
+    return (
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches
+    );
+  }
+
+  function readActiveTheme() {
+    const auto = readAuto();
+    return auto.on ? (systemDark() ? auto.dark : auto.light) : readTheme();
+  }
+
+  function applyActiveTheme() {
+    applyTheme(readActiveTheme());
+  }
+
+  function watchScheme() {
+    if (typeof window.matchMedia !== "function") return;
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const onChange = () => applyActiveTheme();
+    if (typeof mq.addEventListener === "function") mq.addEventListener("change", onChange);
+    else if (typeof mq.addListener === "function") mq.addListener(onChange);
+  }
+
   function activateNova() {
     const root = document.documentElement;
     customThemes = readJson(CUSTOM_KEY, []).filter(validCustom);
     ensureCustomStyles();
     root.classList.add(NOVA_CLASS);
-    applyTheme(readTheme());
+    applyActiveTheme();
+    watchScheme();
     applyFx(readFx());
     ensureWatermark();
     window.addEventListener("resize", scheduleAlign);
@@ -974,8 +1095,10 @@
 
     if (msg.type === "nova:getState") {
       return {
-        theme: readTheme(),
+        theme: readActiveTheme(),
         fx: readFx(),
+        matrix: readMatrix(),
+        auto: readAuto(),
         customThemes: customThemes,
         watermark: readWatermark(),
         wmDebug: watermarkDebug(),
@@ -985,11 +1108,22 @@
 
     if (msg.type === "nova:setTheme" && isValidThemeId(msg.theme)) {
       writeJson(STORAGE_KEY, msg.theme);
+      const auto = readAuto();
+      if (auto.on) {
+        auto.on = false;
+        writeJson(AUTO_KEY, auto);
+      }
       applyTheme(msg.theme);
     } else if (msg.type === "nova:setFx") {
       const fx = msg.fx === "off" ? "off" : "on";
       writeJson(FX_KEY, fx);
       applyFx(fx);
+    } else if (msg.type === "nova:setAuto") {
+      writeJson(AUTO_KEY, sanitizeAuto(msg.auto));
+      applyActiveTheme();
+    } else if (msg.type === "nova:setMatrix") {
+      writeJson(MATRIX_KEY, sanitizeMatrix(msg.matrix));
+      matrixSync();
     } else if (msg.type === "nova:setWatermark") {
       const wm = sanitizeWatermark(msg.watermark);
       localStorage.setItem(WATERMARK_KEY, wm ? JSON.stringify(wm) : JSON.stringify(WATERMARK_OFF));

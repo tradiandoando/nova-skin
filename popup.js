@@ -5,6 +5,10 @@
   const FX_KEY = "nova.fx";
   const CUSTOM_KEY = "nova.customThemes";
   const WATERMARK_KEY = "nova.watermark";
+  const MATRIX_KEY = "nova.matrix";
+  const MATRIX_DEFAULTS = { on: true, density: 25, speed: 6, palette: "all" };
+  const AUTO_KEY = "nova.auto";
+  const AUTO_DEFAULTS = { on: false, dark: "nova", light: "nova-light" };
 
   const GROUPS = [
     {
@@ -131,6 +135,75 @@
     );
   }
 
+  function cleanMatrix(m) {
+    const d = Object.assign({}, MATRIX_DEFAULTS);
+    if (!m || typeof m !== "object") return d;
+    d.on = m.on !== false;
+    const den = Math.round(Number(m.density));
+    if (Number.isFinite(den)) d.density = Math.max(10, Math.min(35, den));
+    const spd = Math.round(Number(m.speed));
+    if (Number.isFinite(spd)) d.speed = Math.max(1, Math.min(10, spd));
+    d.palette = m.palette === "theme" ? "theme" : "all";
+    return d;
+  }
+
+  function cleanAuto(m) {
+    const d = Object.assign({}, AUTO_DEFAULTS);
+    if (!m || typeof m !== "object") return d;
+    d.on = m.on !== false;
+    if (
+      typeof m.dark === "string" &&
+      (ALL_THEMES.some((b) => b.id === m.dark) || m.dark.startsWith("custom-"))
+    ) d.dark = m.dark;
+    if (
+      typeof m.light === "string" &&
+      (ALL_THEMES.some((b) => b.id === m.light) || m.light.startsWith("custom-"))
+    ) d.light = m.light;
+    return d;
+  }
+
+  function themeKind(id) {
+    if (id && id.startsWith("custom-")) {
+      const c = state.customThemes.filter(validCustom).find((t) => "custom-" + t.id === id);
+      return c ? (c.dark !== false ? "dark" : "light") : null;
+    }
+    for (const g of GROUPS) {
+      if (g.themes.some((t) => t.id === id)) return g.label === "Dark" ? "dark" : "light";
+    }
+    return null;
+  }
+
+  /* Deriva la pareja claro/oscuro a partir del tema visible ahora. */
+  function autoPairFrom(manual) {
+    const me = manual || state.theme || "nova";
+    let dark = null;
+    let light = null;
+    if (me.startsWith("custom-")) {
+      if (themeKind(me) === "dark") dark = me;
+      else light = me;
+    } else if (me.endsWith("-light")) {
+      light = me;
+      dark = me.replace(/-light$/, "");
+      if (!ALL_THEMES.some((b) => b.id === dark)) dark = "nova";
+    } else {
+      dark = me;
+      light = me + "-light";
+      if (!ALL_THEMES.some((b) => b.id === light)) light = "nova-light";
+    }
+    dark = dark || "nova";
+    light = light || "nova-light";
+    return { on: true, dark: dark, light: light };
+  }
+
+  function setAutoUI(a) {
+    autoToggle.setAttribute("aria-checked", a && a.on ? "true" : "false");
+  }
+
+  const pushAuto = () => {
+    saveLocal(AUTO_KEY, state.auto);
+    sendMessage({ type: "nova:setAuto", auto: state.auto });
+  };
+
   function customMeta(t) {
     return {
       id: "custom-" + t.id,
@@ -177,6 +250,8 @@
   const state = {
     theme: "",
     fx: "on",
+    matrix: cleanMatrix(loadLocal(MATRIX_KEY, null)),
+    auto: cleanAuto(loadLocal(AUTO_KEY, null)),
     watermark: loadLocal(WATERMARK_KEY, null),
     customThemes: loadLocal(CUSTOM_KEY, []).filter(validCustom),
   };
@@ -231,6 +306,11 @@
     const btn = e.target.closest(".theme-btn");
     if (!btn || btn.dataset.theme === state.theme) return;
     const theme = btn.dataset.theme;
+    if (state.auto.on) {
+      state.auto.on = false;
+      setAutoUI(state.auto);
+      pushAuto();
+    }
 
     state.theme = theme;
     saveLocal(STORAGE_KEY, theme);
@@ -259,6 +339,69 @@
     state.fx = next;
     saveLocal(FX_KEY, next);
     sendMessage({ type: "nova:setFx", fx: next });
+  });
+
+  /* ---------- Matrix controls ---------- */
+  const matrixToggle = document.getElementById("matrixToggle");
+  const matrixFields = document.getElementById("matrixFields");
+  const matrixDensity = document.getElementById("matrixDensity");
+  const matrixSpeed = document.getElementById("matrixSpeed");
+  const matrixPalAll = document.getElementById("matrixPalAll");
+  const matrixPalTheme = document.getElementById("matrixPalTheme");
+
+  const setMatrixUI = (m) => {
+    matrixToggle.setAttribute("aria-checked", m.on ? "true" : "false");
+    matrixFields.hidden = !m.on;
+    matrixDensity.value = String(m.density);
+    matrixSpeed.value = String(m.speed);
+    matrixPalAll.classList.toggle("active", m.palette !== "theme");
+    matrixPalTheme.classList.toggle("active", m.palette === "theme");
+  };
+
+  const pushMatrix = () => {
+    saveLocal(MATRIX_KEY, state.matrix);
+    sendMessage({ type: "nova:setMatrix", matrix: state.matrix });
+  };
+
+  matrixToggle.addEventListener("click", () => {
+    state.matrix.on = matrixToggle.getAttribute("aria-checked") !== "true";
+    setMatrixUI(state.matrix);
+    pushMatrix();
+  });
+
+  matrixDensity.addEventListener("input", () => {
+    state.matrix.density = Math.round(Number(matrixDensity.value));
+    pushMatrix();
+  });
+
+  matrixSpeed.addEventListener("input", () => {
+    state.matrix.speed = Math.round(Number(matrixSpeed.value));
+    pushMatrix();
+  });
+
+  matrixPalAll.addEventListener("click", () => {
+    if (state.matrix.palette === "all") return;
+    state.matrix.palette = "all";
+    setMatrixUI(state.matrix);
+    pushMatrix();
+  });
+
+  matrixPalTheme.addEventListener("click", () => {
+    if (state.matrix.palette === "theme") return;
+    state.matrix.palette = "theme";
+    setMatrixUI(state.matrix);
+    pushMatrix();
+  });
+
+  /* ---------- Auto theme ---------- */
+  const autoToggle = document.getElementById("autoToggle");
+
+  autoToggle.addEventListener("click", () => {
+    const turningOn = autoToggle.getAttribute("aria-checked") !== "true";
+    state.auto = turningOn ? autoPairFrom(state.theme) : Object.assign({}, state.auto, { on: false });
+    setAutoUI(state.auto);
+    pushAuto();
+    if (!turningOn) requestState(handle);
   });
 
   /* ---------- Watermark toggle ---------- */
@@ -496,42 +639,56 @@
   render();
   applyPreview(state.theme);
   setFxUI(state.fx);
+  setMatrixUI(state.matrix);
+  setAutoUI(state.auto);
   setWmUI(state.watermark);
   setWmStatus(null);
   setModel("");
 
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    const tab = tabs && tabs[0];
-    if (!tab) return;
-    const requestState = (cb) => {
+  const requestState = (cb) => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      const tab = tabs && tabs[0];
+      if (!tab) return cb(null);
       chrome.tabs.sendMessage(tab.id, { type: "nova:getState" }, (res) => {
         if (chrome.runtime.lastError) return cb(null);
         cb(res);
       });
-    };
-    const handle = (res) => {
-      if (res && typeof res.theme === "string" && findTheme(res.theme)) {
-        state.theme = res.theme;
-        state.fx = res.fx === "off" ? "off" : "on";
-        state.customThemes = (res.customThemes || []).filter(validCustom);
-        if (res.watermark && (res.watermark.text || res.watermark.image)) state.watermark = res.watermark;
-        saveLocal(WATERMARK_KEY, state.watermark);
-        saveLocal(CUSTOM_KEY, state.customThemes);
-        render();
-        applyPreview(state.theme);
-        setFxUI(state.fx);
-        setWmUI(state.watermark);
-        setWmStatus(res.wmDebug);
-        setModel(res.model);
-      }
-    };
-    requestState((res) => {
-      if (res) return handle(res);
-      /* Sin content script en la pestaña (típico tras recargar la
-         extensión sin recargar la pestaña). Lo inyectamos a mano y
-         reintentamos. */
-      wmStatus.className = "wm-status";
-      wmStatus.textContent = "Inyectando NOVA Skin en la pestaña activa…";
+    });
+  };
+
+  const handle = (res) => {
+    if (res && typeof res.theme === "string" && findTheme(res.theme)) {
+      state.theme = res.theme;
+      state.fx = res.fx === "off" ? "off" : "on";
+      state.matrix = cleanMatrix(res.matrix);
+      state.auto = cleanAuto(res.auto);
+      state.customThemes = (res.customThemes || []).filter(validCustom);
+      if (res.watermark && (res.watermark.text || res.watermark.image)) state.watermark = res.watermark;
+      saveLocal(WATERMARK_KEY, state.watermark);
+      saveLocal(MATRIX_KEY, state.matrix);
+      saveLocal(AUTO_KEY, state.auto);
+      saveLocal(CUSTOM_KEY, state.customThemes);
+      render();
+      applyPreview(state.theme);
+      setFxUI(state.fx);
+      setMatrixUI(state.matrix);
+      setAutoUI(state.auto);
+      setWmUI(state.watermark);
+      setWmStatus(res.wmDebug);
+      setModel(res.model);
+    }
+  };
+
+  requestState((res) => {
+    if (res) return handle(res);
+    /* Sin content script en la pestaña (típico tras recargar la
+       extensión sin recargar la pestaña). Lo inyectamos a mano y
+       reintentamos. */
+    wmStatus.className = "wm-status";
+    wmStatus.textContent = "Inyectando NOVA Skin en la pestaña activa…";
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      const tab = tabs && tabs[0];
+      if (!tab) return;
       try {
         chrome.scripting.executeScript(
           { target: { tabId: tab.id }, files: ["content.js"] },
