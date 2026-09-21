@@ -1078,6 +1078,120 @@ html.nova-skin-active[data-nova-fx="off"] {
   --nova-speed: 0ms;
 }
 
+/* =========================================================
+   14b · CAMPO DE PARTÍCULAS NOVA (nova-matrix)
+   Burbujas digitales que nacen desde abajo y ascienden con
+   deriva lateral suave, desvaneciéndose al llegar arriba.
+   Sistema independiente de la atmosphere (no comparte tokens
+   de animación ni z-index). Solo se enciende con FX on, es
+   ambiental (pointer-events: none) y nunca usa 999 ni -1. */
+html.nova-skin-active .nova-matrix-field {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  z-index: 50;
+  pointer-events: none;
+}
+
+/* --- 14b · campo de partículas NOVA ---
+   Tres poblaciones conviven (máx ~25 en total: 15 partículas de
+   caracteres/ráfagas de código + 10 mini-orbs). Cada una toma un
+   color aleatorio de los acentos de los themes disponibles (--mx-color)
+   y comparte el mismo ascenso con deriva lateral suave. */
+html.nova-skin-active .nova-matrix-field .nova-matrix-particle,
+html.nova-skin-active .nova-matrix-field .nova-matrix-bubble,
+html.nova-skin-active .nova-matrix-field .nova-matrix-wisp {
+  position: absolute;
+  bottom: -4vh;
+  left: var(--mx-x, 50%);
+  opacity: 0;
+  user-select: none;
+  pointer-events: none;
+  will-change: transform, opacity;
+  animation: nova-matrix-rise var(--mx-dur, 8s) linear 0s forwards;
+}
+
+/* Partículas: glifos digitales 0 / 1 / · */
+html.nova-skin-active .nova-matrix-field .nova-matrix-particle {
+  font-family: var(--nova-font-mono);
+  font-size: var(--mx-size, 12px);
+  line-height: 1;
+  color: var(--mx-color, var(--nova-accent-2));
+  text-shadow: 0 0 6px color-mix(in srgb, var(--mx-color, var(--nova-accent-2)) 38%, transparent);
+}
+
+/* Ráfagas de código: mini-columna de 0/1, ascendente, con cabecera
+   clara (la "cabeza" del rolling code) */
+html.nova-skin-active .nova-matrix-field .nova-matrix-wisp {
+  font-family: var(--nova-font-mono);
+  font-size: var(--mx-size, 10px);
+  line-height: 1.5;
+  white-space: pre;
+  color: var(--mx-color, var(--nova-accent-2));
+  text-shadow: 0 0 5px color-mix(in srgb, var(--mx-color, var(--nova-accent-2)) 42%, transparent);
+}
+
+html.nova-skin-active .nova-matrix-field .nova-matrix-wisp--lead {
+  color: color-mix(in srgb, #ffffff 78%, var(--mx-color, var(--nova-accent-2)));
+  font-weight: 700;
+}
+
+/* Mini-orbs: esferas compactas y luminosas (cuerpo sólido + hotspot
+   interno), NO burbujas de vidrio de pecera. */
+html.nova-skin-active .nova-matrix-field .nova-matrix-bubble {
+  width: var(--mx-size, 12px);
+  height: var(--mx-size, 12px);
+  border-radius: 50%;
+  background:
+    radial-gradient(
+      circle at 32% 28%,
+      rgba(255, 255, 255, 0.85) 0%,
+      rgba(255, 255, 255, 0) 32%
+    ),
+    radial-gradient(
+      circle at 50% 50%,
+      var(--mx-color) 0%,
+      color-mix(in srgb, var(--mx-color) 55%, #05060d) 100%
+    );
+  box-shadow: 0 0 6px color-mix(in srgb, var(--mx-color) 55%, transparent);
+}
+
+/* Safety net: FX off oculta el campo al instante (JS además lo borra). */
+html.nova-skin-active[data-nova-fx="off"] .nova-matrix-field {
+  display: none;
+}
+
+@keyframes nova-matrix-rise {
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0;
+  }
+
+  10% {
+    opacity: var(--mx-opacity, 0.3);
+  }
+
+  45% {
+    transform: translate3d(var(--mx-drift, 20px), -50vh, 0);
+  }
+
+  70% {
+    opacity: var(--mx-opacity, 0.3);
+  }
+
+  100% {
+    transform: translate3d(var(--mx-drift-back, -14px), -118vh, 0);
+    opacity: 0;
+  }
+}
+
+/* Reduced motion: el campo no se pinta (JS tampoco lo crea). */
+@media (prefers-reduced-motion: reduce) {
+  html.nova-skin-active .nova-matrix-field {
+    display: none;
+  }
+}
+
 /* --- MARCA DE AGUA PERSONAL ---
    Banner de arranque estilo terminal (vibra opencode): letras pesadas
    blocky dentro de un recuadro con borde y caracteres de caja, barra

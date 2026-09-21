@@ -755,9 +755,178 @@
     const root = document.documentElement;
     if (fx === "off") {
       root.dataset.novaFx = "off";
+      matrixStop();
     } else {
       delete root.dataset.novaFx;
+      matrixStart();
     }
+  }
+
+  /* ---------- campo de partículas digitales (nova-matrix) ----------
+     Sistema independiente de la atmosphere: burbujas/partículas que
+     nacen desde abajo, ascienden con deriva lateral suave y se
+     desvanecen en la parte superior. Vive en un único contenedor
+     (nova-matrix-field) creado en <body>; arranca con FX on y se
+     detiene/limpia con FX off. Respeta prefers-reduced-motion (no
+     crea nada) y usa un z-index positivo y NO bloquea la UI. */
+  const MATRIX_ID = "nova-matrix-field";
+  const MATRIX_CHARS = ["0", "1", "·"];
+  const MATRIX_CODE = ["0", "1"];
+  const MATRIX_MAX_PARTICLES = 15;
+  const MATRIX_MAX_BUBBLES = 10;
+  const MATRIX_MAX = MATRIX_MAX_PARTICLES + MATRIX_MAX_BUBBLES;
+  const MATRIX_MIN_MS = 300;
+  const MATRIX_MAX_MS = 420;
+  /* Acentos de los themes disponibles (nova, cosmic, aurora, mono,
+     sunset + variantes light): cada partícula/burbuja toma un color
+     distinto, todo el espectro NOVA conviviendo en el campo. */
+  const MATRIX_COLORS = [
+    "#8b7cff", "#c58cff", "#5ee7ff",
+    "#6d7bff", "#9b8bff", "#9bb6ff",
+    "#4fe0c4", "#7db8ff", "#66e3d8",
+    "#c6cad6", "#dfe3ee", "#9aa0b3",
+    "#ff8a5c", "#ffb36b", "#ff6f91",
+    "#7b6cf0", "#b57cef", "#3dd4ef",
+    "#5d6cee", "#8b7cf5", "#8496ff",
+    "#35c9b0", "#5a9de0", "#36c7b8",
+  ];
+
+  let matrixField = null;
+  let matrixTimer = 0;
+  let matrixParts = 0;
+  let matrixBubbles = 0;
+  let matrixRunning = false;
+
+  function matrixReduceMotion() {
+    return (
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    );
+  }
+
+  function ensureMatrixField() {
+    if (!document.body) return null;
+    if (!matrixField || !matrixField.isConnected) {
+      matrixField = document.getElementById(MATRIX_ID);
+    }
+    if (!matrixField) {
+      matrixField = document.createElement("div");
+      matrixField.id = MATRIX_ID;
+      matrixField.className = "nova-matrix-field";
+      matrixField.setAttribute("aria-hidden", "true");
+      document.body.appendChild(matrixField);
+    }
+    return matrixField;
+  }
+
+  const matrixPick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+  function spawnMatrixItem(field, bubble) {
+    const el = document.createElement("span");
+    if (bubble) {
+      el.className = "nova-matrix-bubble";
+    } else if (Math.random() < 0.4) {
+      /* Ráfaga de código: mini-columna ascendente de 0/1 con la
+         cabecera clara (guiño del "rolling code" Matrix). */
+      el.className = "nova-matrix-wisp";
+      const rows = 3 + Math.floor(Math.random() * 3);
+      for (let i = 0; i < rows; i++) {
+        if (i > 0) el.appendChild(document.createTextNode("\n"));
+        if (i === 0) {
+          const lead = document.createElement("span");
+          lead.className = "nova-matrix-wisp--lead";
+          lead.textContent = matrixPick(MATRIX_CODE);
+          el.appendChild(lead);
+        } else {
+          el.appendChild(document.createTextNode(matrixPick(MATRIX_CODE)));
+        }
+      }
+    } else {
+      el.className = "nova-matrix-particle";
+      el.textContent = matrixPick(MATRIX_CHARS);
+    }
+    const durMs = 6000 + Math.floor(Math.random() * 5000);
+    const amp = Math.round(Math.random() * 60 - 30);
+    el.style.setProperty("--mx-x", (4 + Math.random() * 92).toFixed(1) + "%");
+    el.style.setProperty("--mx-size", (bubble ? 10 + Math.random() * 12 : 9 + Math.random() * 5).toFixed(1) + "px");
+    el.style.setProperty("--mx-dur", durMs + "ms");
+    el.style.setProperty("--mx-opacity", (bubble ? 0.16 + Math.random() * 0.24 : 0.1 + Math.random() * 0.22).toFixed(2));
+    el.style.setProperty("--mx-color", matrixPick(MATRIX_COLORS));
+    el.style.setProperty("--mx-drift", amp + "px");
+    el.style.setProperty("--mx-drift-back", Math.round(amp * -0.7) + "px");
+    field.appendChild(el);
+    if (bubble) matrixBubbles += 1;
+    else matrixParts += 1;
+    const done = () => {
+      if (!el.isConnected) return;
+      el.removeEventListener("animationend", done);
+      el.remove();
+      if (bubble) matrixBubbles = Math.max(0, matrixBubbles - 1);
+      else matrixParts = Math.max(0, matrixParts - 1);
+    };
+    el.addEventListener("animationend", done, { once: true });
+    setTimeout(done, durMs + 600);
+  }
+
+  function matrixSchedule() {
+    if (matrixTimer) return;
+    matrixTimer = setTimeout(
+      matrixTick,
+      MATRIX_MIN_MS + Math.random() * (MATRIX_MAX_MS - MATRIX_MIN_MS)
+    );
+  }
+
+  function matrixFlicker(field) {
+    if (Math.random() < 0.5) return;
+    const glyphs = field.querySelectorAll(".nova-matrix-particle");
+    if (!glyphs.length) return;
+    glyphs[Math.floor(Math.random() * glyphs.length)].textContent = matrixPick(MATRIX_CHARS);
+  }
+
+  function matrixTick() {
+    matrixTimer = 0;
+    if (!matrixRunning || matrixReduceMotion()) return;
+    const field = ensureMatrixField();
+    if (field) {
+      let wantBubble;
+      if (matrixBubbles >= MATRIX_MAX_BUBBLES) wantBubble = false;
+      else if (matrixParts >= MATRIX_MAX_PARTICLES) wantBubble = true;
+      else wantBubble = Math.random() < 0.4;
+      if (
+        (wantBubble && matrixBubbles < MATRIX_MAX_BUBBLES) ||
+        (!wantBubble && matrixParts < MATRIX_MAX_PARTICLES)
+      ) {
+        spawnMatrixItem(field, wantBubble);
+      }
+      matrixFlicker(field);
+    }
+    matrixSchedule();
+  }
+
+  function matrixStart() {
+    if (matrixRunning || matrixReduceMotion()) return;
+    if (!document.body) {
+      if (typeof requestAnimationFrame === "function") requestAnimationFrame(matrixStart);
+      return;
+    }
+    const field = ensureMatrixField();
+    if (!field) return;
+    matrixRunning = true;
+    matrixParts = 0;
+    matrixBubbles = 0;
+    matrixSchedule();
+  }
+
+  function matrixStop() {
+    matrixRunning = false;
+    if (matrixTimer) {
+      clearTimeout(matrixTimer);
+      matrixTimer = 0;
+    }
+    if (matrixField && matrixField.isConnected) matrixField.remove();
+    matrixField = null;
+    matrixParts = 0;
+    matrixBubbles = 0;
   }
 
   function activateNova() {
